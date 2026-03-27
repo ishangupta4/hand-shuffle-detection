@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+
+# Data — large binary/generated files, never committed
+data/raw_videos/
+data/keypoints/
+data/keypoints_cleaned/
+data/keypoints_normalized/
+data/features/
+data/features_static/
+data/features_dynamic/
+data/augmented/
+
+# Output artifacts — skip all the heavy generated visuals and logs
+outputs/sample_frames/
+outputs/feature_visualizations/
+outputs/visualizations/
+outputs/cleaning_viz/
+outputs/hyperparam_search/
+outputs/*.png
+outputs/*.jpg
+outputs/*.jpeg
+outputs/*.gif
+outputs/*.mp4
+
+#   outputs/*.json       (LOOCV results, metrics summary, cnn1d_meta)
+#   outputs/*.csv        (error analysis, classical baselines)
+#   outputs/reports/     (markdown evaluation reports)
+#   outputs/models/      (model weights — tracked via Git LFS)
+
+# MediaPipe model — auto-downloaded at runtime, no need to commit
+*.task
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+src.zip

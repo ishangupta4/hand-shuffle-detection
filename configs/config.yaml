@@ -1,0 +1,25 @@
+# Hand Shuffle AI - Project Configuration
+
+paths:
+  raw_videos: data/raw_videos
+  keypoints: data/keypoints
+  features: data/features
+  augmented: data/augmented
+  labels: data/labels.csv
+  outputs: outputs
+
+mediapipe:
+  model_path: models/hand_landmarker.task
+  max_num_hands: 2
+  min_detection_confidence: 0.5
+  min_tracking_confidence: 0.5
+
+video_quality:
+  min_resolution: [480, 360]
+  good_resolution: [1280, 720]
+  min_fps: 15
+  good_fps: 24
+  blur_threshold_poor: 50
+  blur_threshold_good: 100
+  brightness_low: 40
+  brightness_high: 220
