@@ -1,0 +1,16 @@
+torch
+torchvision
+mediapipe
+opencv-python
+numpy
+pandas
+matplotlib
+seaborn
+scikit-learn
+scipy
+pyyaml
+tqdm
+jupyter
+fastapi
+uvicorn
+python-multipart
