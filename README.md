@@ -1,3 +1,12 @@
+---
+title: Hand Shuffle AI
+emoji: 🤚
+colorFrom: blue
+colorTo: purple
+sdk: docker
+pinned: false
+---
+
 # hand-shuffle-detection
 
 An AI pipeline that predicts which hand holds a hidden object after a hand-shuffle sequence. Given a video of two hands shuffling, the model extracts skeletal keypoints frame-by-frame, engineers motion and pose features, and classifies the final hand using a 1D CNN trained on temporal sequences.
