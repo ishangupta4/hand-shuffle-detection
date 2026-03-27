@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Hand Shuffle — AI Inference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f14;--bg1:#13161e;--bg2:#1a1e28;--bg3:#222636;
+  --line:#2a2e3e;--line2:#363b52;
+  --txt:#e2e4ed;--txt2:#8b8fa8;--txt3:#555975;
+  --acc:#4f9cf9;--acc-dim:#1e3a5f;
+  --left:#4f9cf9;--left-bg:#0e2040;
+  --right:#f97b4f;--right-bg:#3d1a0a;
+  --warn:#f9c74f;--ok:#4fcf8a;--ok-bg:#0a2d1c;
+  --game:#a78bfa;--game-bg:#1e1540;
+  --mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;--r:6px;
+}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased}
+
+.view{position:absolute;inset:0;display:none;flex-direction:column}
+.view.active{display:flex}
+
+/* header */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:52px;flex-shrink:0;background:var(--bg1);border-bottom:1px solid var(--line)}
+.hdr-left{display:flex;align-items:center;gap:16px}
+.logo{font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:.06em}
+.logo span{color:var(--txt3)}
+.sys-badge{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:3px;border:1px solid var(--line2);color:var(--txt3);transition:all .3s}
+.sys-badge.ok{border-color:var(--ok);color:var(--ok);background:var(--ok-bg)}
+.sys-badge.err{border-color:var(--right);color:var(--right);background:var(--right-bg)}
+.sys-badge.live{border-color:var(--acc);color:var(--acc);background:var(--acc-dim)}
+.sys-badge.game{border-color:var(--game);color:var(--game);background:var(--game-bg)}
+.hdr-right{display:flex;gap:8px;align-items:center}
+.hdr-btn{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:6px 14px;border-radius:var(--r);cursor:pointer;transition:all .15s;border:1px solid var(--line2);background:transparent;color:var(--txt2)}
+.hdr-btn:hover{background:var(--bg2);color:var(--txt)}
+.hdr-btn.danger{border-color:#4a2020;color:#f08080}
+.hdr-btn.danger:hover{background:#2a1010;border-color:#7a3030}
+
+/* shared body grid */
+.body{flex:1;display:grid;grid-template-columns:1fr 300px;overflow:hidden}
+
+/* camera */
+.cam-panel,.game-cam{position:relative;background:#080a0e;overflow:hidden}
+.cam-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;transform:scaleX(-1)}
+.cam-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;transform:scaleX(-1)}
+.cam-idle{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.cam-idle svg{opacity:.15}
+.cam-idle p{font-size:13px;font-weight:300;color:var(--txt3)}
+
+/* countdown */
+.cd-overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(8,10,14,.75);pointer-events:none}
+.cd-overlay.show{display:flex}
+.cd-num{font-family:var(--mono);font-size:112px;font-weight:500;color:#fff;line-height:1;animation:cpop .8s ease-out}
+.cd-sub{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--txt3)}
+@keyframes cpop{0%{transform:scale(1.5);opacity:0}40%{transform:scale(1);opacity:1}100%{transform:scale(.92);opacity:.8}}
+
+/* cam overlay tags */
+.cam-tl,.cam-tr,.cam-bl,.cam-br{position:absolute;pointer-events:none}
+.cam-tl{top:14px;left:16px;display:flex;gap:6px}
+.cam-tr{top:14px;right:16px}
+.cam-bl{bottom:14px;left:16px}
+.cam-br{bottom:14px;right:16px}
+.ctag{font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:3px;background:rgba(13,15,20,.7);border:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.3);transition:all .2s}
+.ctag.hand-left{color:#7dc4f8;border-color:rgba(125,196,248,.3)}
+.ctag.hand-right{color:#f8a07d;border-color:rgba(248,160,125,.3)}
+.ctag.pred-left{color:var(--left);border-color:rgba(79,156,249,.4);background:rgba(14,32,64,.8)}
+.ctag.pred-right{color:var(--right);border-color:rgba(249,123,79,.4);background:rgba(61,26,10,.8)}
+.ctag.rec-tag{color:#4fcf8a;border-color:rgba(79,207,138,.4);background:rgba(10,45,28,.8)}
+.buf-label{font-family:var(--mono);font-size:9px;color:var(--txt3)}
+.nh-label{font-family:var(--mono);font-size:9px;color:var(--warn);opacity:0;transition:opacity .3s;letter-spacing:.08em}
+.nh-label.show{opacity:1}
+
+/* game progress bar */
+#game-prog-wrap{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.06);display:none}
+#game-prog-wrap.show{display:block}
+#game-prog{height:100%;width:0%;background:var(--game);transition:width .2s linear}
+
+/* right panel */
+.rpanel,.game-rpanel{background:var(--bg1);border-left:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+.rblock{padding:18px 20px;border-bottom:1px solid var(--line)}
+.rlabel{font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--txt3);margin-bottom:14px}
+
+/* confidence */
+.conf-row{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.conf-row:last-child{margin-bottom:0}
+.conf-top{display:flex;justify-content:space-between;align-items:baseline}
+.conf-name{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase}
+.conf-name.L{color:var(--left)}.conf-name.R{color:var(--right)}
+.conf-val{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--txt3);transition:color .3s}
+.conf-val.L.on{color:var(--left)}.conf-val.R.on{color:var(--right)}
+.conf-track{height:4px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.conf-fill{height:100%;border-radius:2px;width:50%;transition:width .4s cubic-bezier(.4,0,.2,1)}
+.conf-fill.L{background:var(--left)}.conf-fill.R{background:var(--right)}
+.conf-row.frozen .conf-val{color:var(--txt3)!important}
+.conf-row.frozen .conf-fill{opacity:.12;width:50%!important}
+.conf-row.dim .conf-val{opacity:.3}.conf-row.dim .conf-fill{opacity:.2}
+
+/* verdict */
+.verdict-block{flex:1;padding:18px 20px;display:flex;flex-direction:column;min-height:0}
+.verdict-inner{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:var(--r);gap:6px;background:var(--bg);transition:border-color .3s,background .3s}
+.verdict-inner.L{border-color:rgba(79,156,249,.4);background:var(--left-bg)}
+.verdict-inner.R{border-color:rgba(249,123,79,.4);background:var(--right-bg)}
+.v-sub{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--txt3)}
+.v-hand{font-family:var(--mono);font-size:44px;font-weight:500;color:var(--txt3);letter-spacing:-.02em;transition:color .25s}
+.v-hand.L{color:var(--left)}.v-hand.R{color:var(--right)}
+.v-conf{font-size:12px;font-weight:300;color:var(--txt3)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.pulse{animation:pulse 1.8s ease-in-out infinite}
+
+/* info box */
+.info-block{padding:14px 20px;border-top:1px solid var(--line)}
+.info-inner{border-radius:var(--r);border:1px solid var(--line);background:var(--bg);overflow:hidden}
+.info-row{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12px;font-weight:300;animation:fdin .2s ease}
+.info-row:last-child{border-bottom:none}
+@keyframes fdin{from{opacity:0;transform:translateY(-2px)}to{opacity:1}}
+.info-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.info-dot.warn{background:var(--warn)}.info-dot.err{background:var(--right)}.info-dot.ok{background:var(--ok)}
+.info-msg{color:var(--txt2);line-height:1.45}
+.info-empty{padding:10px 12px;font-size:11px;color:var(--txt3);font-style:italic;font-family:var(--mono)}
+
+/* controls */
+.ctrl-row{padding:14px 20px;display:flex;gap:8px;border-top:1px solid var(--line)}
+.btn{flex:1;padding:9px 0;border-radius:var(--r);font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .15s;border:1px solid var(--line2);background:transparent;color:var(--txt2)}
+.btn:hover:not(:disabled){background:var(--bg2);color:var(--txt)}
+.btn:disabled{opacity:.25;cursor:not-allowed}
+.btn.prim{background:var(--acc);color:#fff;border-color:var(--acc)}
+.btn.prim:hover:not(:disabled){background:#3a82d8}
+.btn.prim-game{background:var(--game);color:#fff;border-color:var(--game)}
+.btn.prim-game:hover:not(:disabled){background:#8b70e8}
+.btn.stop-btn{border-color:#4a2020;color:#f08080}
+.btn.stop-btn:hover:not(:disabled){background:#1a0808}
+.btn.reset-btn{border-color:var(--line2);color:var(--txt3)}
+.btn.reset-btn:hover:not(:disabled){background:var(--bg2);color:var(--txt)}
+
+/* game status panel */
+.game-status-block{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:18px}
+.game-state-label{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--txt3)}
+.ring-wrap{position:relative;width:120px;height:120px}
+.ring-wrap svg{transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:var(--bg3);stroke-width:4}
+.ring-track{fill:none;stroke:var(--game);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .2s linear,stroke .5s}
+.ring-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:32px;font-weight:500;color:var(--game);transition:color .5s}
+.result-card{width:100%;border-radius:var(--r);border:1px solid var(--line);background:var(--bg);padding:20px;display:none;flex-direction:column;align-items:center;gap:8px;transition:border-color .3s,background .3s}
+.result-card.show{display:flex}
+.result-card.L{border-color:rgba(79,156,249,.4);background:var(--left-bg)}
+.result-card.R{border-color:rgba(249,123,79,.4);background:var(--right-bg)}
+.res-label{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--txt3)}
+.res-hand{font-family:var(--mono);font-size:52px;font-weight:500;letter-spacing:-.02em}
+.res-hand.L{color:var(--left)}.res-hand.R{color:var(--right)}
+.res-conf{font-size:13px;font-weight:300;color:var(--txt2)}
+.game-conf-block{width:100%;display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.g-conf-row{display:flex;flex-direction:column;gap:4px}
+.g-conf-top{display:flex;justify-content:space-between}
+.g-cname{font-family:var(--mono);font-size:10px;font-weight:500;text-transform:uppercase}
+.g-cname.L{color:var(--left)}.g-cname.R{color:var(--right)}
+.g-cval{font-family:var(--mono);font-size:10px;color:var(--txt3)}
+.g-track{height:3px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.g-fill{height:100%;border-radius:2px;transition:width .4s ease;width:50%}
+.g-fill.L{background:var(--left)}.g-fill.R{background:var(--right)}
+.game-info-block{padding:14px 20px;border-top:1px solid var(--line)}
+.game-ctrl{padding:14px 20px;display:flex;gap:8px;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+
+<!-- ═══ LIVE VIEW ═══ -->
+<div class="view active" id="view-live">
+  <header class="hdr">
+    <div class="hdr-left">
+      <span class="logo">HandShuffle<span>.ai</span></span>
+      <span class="sys-badge" id="live-badge">idle</span>
+    </div>
+    <div class="hdr-right">
+      <button class="hdr-btn" onclick="switchToGame()">Start Detection Game</button>
+      <button class="hdr-btn danger" id="live-stop-btn" onclick="liveStop()" style="display:none">Stop Camera</button>
+    </div>
+  </header>
+  <div class="body">
+    <div class="cam-panel">
+      <div class="cam-idle" id="live-idle">
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+          <rect x="4" y="12" width="48" height="34" rx="5" stroke="#8b8fa8" stroke-width="1.5"/>
+          <circle cx="28" cy="29" r="10" stroke="#8b8fa8" stroke-width="1.5"/>
+          <circle cx="28" cy="29" r="4" fill="#8b8fa8" opacity=".3"/>
+          <rect x="20" y="7" width="16" height="7" rx="2.5" fill="#8b8fa8" opacity=".4"/>
+        </svg>
+        <p>Click Start Live Prediction below</p>
+      </div>
+      <video id="webcam-live" class="cam-video" autoplay muted playsinline></video>
+      <canvas id="kp-live" class="cam-canvas"></canvas>
+      <div class="cd-overlay" id="live-cd">
+        <span class="cd-num" id="live-cd-n">3</span>
+        <span class="cd-sub">live prediction starting</span>
+      </div>
+      <div class="cam-tl">
+        <div class="ctag" id="live-ltag">Left</div>
+        <div class="ctag" id="live-rtag">Right</div>
+      </div>
+      <div class="cam-tr"><div class="ctag" id="live-ptag">—</div></div>
+      <div class="cam-bl"><span class="buf-label" id="live-buftag">—</span></div>
+      <div class="cam-br"><span class="nh-label" id="live-nhtag">NO HANDS</span></div>
+    </div>
+    <div class="rpanel">
+      <div class="rblock">
+        <div class="rlabel">Confidence</div>
+        <div class="conf-row frozen" id="live-crL">
+          <div class="conf-top"><span class="conf-name L">Left hand</span><span class="conf-val L" id="live-cvL">—</span></div>
+          <div class="conf-track"><div class="conf-fill L" id="live-fL" style="width:50%"></div></div>
+        </div>
+        <div class="conf-row frozen" id="live-crR">
+          <div class="conf-top"><span class="conf-name R">Right hand</span><span class="conf-val R" id="live-cvR">—</span></div>
+          <div class="conf-track"><div class="conf-fill R" id="live-fR" style="width:50%"></div></div>
+        </div>
+      </div>
+      <div class="verdict-block">
+        <div class="rlabel">Prediction</div>
+        <div class="verdict-inner" id="live-verdict">
+          <span class="v-sub">object is in the</span>
+          <span class="v-hand pulse" id="live-vhand">?</span>
+          <span class="v-conf" id="live-vconf">start prediction to begin</span>
+        </div>
+      </div>
+      <div class="info-block">
+        <div class="rlabel" style="margin-bottom:10px">System Status</div>
+        <div class="info-inner" id="live-info-inner">
+          <div class="info-empty" id="live-info-empty">No active warnings</div>
+        </div>
+      </div>
+      <div class="ctrl-row">
+        <button class="btn prim" id="live-start-btn" onclick="liveStart()">Start Prediction</button>
+        <button class="btn reset-btn" id="live-reset-btn" onclick="liveReset()" disabled>Reset Buffer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ GAME VIEW ═══ -->
+<div class="view" id="view-game">
+  <header class="hdr">
+    <div class="hdr-left">
+      <span class="logo">HandShuffle<span>.ai</span> <span style="color:var(--game);font-size:11px">/ detection game</span></span>
+      <span class="sys-badge" id="game-badge">idle</span>
+    </div>
+    <div class="hdr-right">
+      <button class="hdr-btn" onclick="switchToLive()">← Live Mode</button>
+      <button class="hdr-btn danger" id="game-stop-hdr" onclick="gameStop()" style="display:none">Stop Camera</button>
+    </div>
+  </header>
+  <div class="body">
+    <div class="game-cam">
+      <div class="cam-idle" id="game-idle">
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+          <rect x="4" y="12" width="48" height="34" rx="5" stroke="#8b8fa8" stroke-width="1.5"/>
+          <circle cx="28" cy="29" r="10" stroke="#8b8fa8" stroke-width="1.5"/>
+          <circle cx="28" cy="29" r="4" fill="#8b8fa8" opacity=".3"/>
+          <rect x="20" y="7" width="16" height="7" rx="2.5" fill="#8b8fa8" opacity=".4"/>
+        </svg>
+        <p>Click Start Round below</p>
+      </div>
+      <video id="webcam-game" class="cam-video" autoplay muted playsinline></video>
+      <canvas id="kp-game" class="cam-canvas"></canvas>
+      <div class="cd-overlay" id="game-cd">
+        <span class="cd-num" id="game-cd-n">3</span>
+        <span class="cd-sub" id="game-cd-sub">get ready to shuffle</span>
+      </div>
+      <div class="cam-tl">
+        <div class="ctag" id="game-ltag">Left</div>
+        <div class="ctag" id="game-rtag">Right</div>
+      </div>
+      <div class="cam-tr"><div class="ctag" id="game-ptag">—</div></div>
+      <div class="cam-bl"><span class="buf-label" id="game-buftag">—</span></div>
+      <div class="cam-br"><span class="nh-label" id="game-nhtag">NO HANDS</span></div>
+      <div id="game-prog-wrap"><div id="game-prog"></div></div>
+    </div>
+    <div class="game-rpanel">
+      <div class="game-status-block">
+        <span class="game-state-label" id="game-state-lbl">ready to start</span>
+        <div class="ring-wrap">
+          <svg width="120" height="120" viewBox="0 0 120 120">
+            <circle class="ring-bg" cx="60" cy="60" r="52"/>
+            <circle class="ring-track" id="ring-track" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="0"/>
+          </svg>
+          <div class="ring-num" id="ring-num">15</div>
+        </div>
+        <div class="result-card" id="result-card">
+          <span class="res-label">object detected in</span>
+          <span class="res-hand" id="res-hand">—</span>
+          <span class="res-conf" id="res-conf">—</span>
+          <div class="game-conf-block">
+            <div class="g-conf-row">
+              <div class="g-conf-top"><span class="g-cname L">Left</span><span class="g-cval" id="g-cvL">—</span></div>
+              <div class="g-track"><div class="g-fill L" id="g-fL" style="width:50%"></div></div>
+            </div>
+            <div class="g-conf-row">
+              <div class="g-conf-top"><span class="g-cname R">Right</span><span class="g-cval" id="g-cvR">—</span></div>
+              <div class="g-track"><div class="g-fill R" id="g-fR" style="width:50%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="game-info-block">
+        <div class="rlabel" style="margin-bottom:10px">System Status</div>
+        <div class="info-inner" id="game-info-inner">
+          <div class="info-empty" id="game-info-empty">No active warnings</div>
+        </div>
+      </div>
+      <div class="game-ctrl">
+        <button class="btn prim-game" id="game-start-btn" onclick="gameStart()">Start Round</button>
+        <button class="btn stop-btn" id="game-stop-btn" onclick="gameStop()" disabled>Stop</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ─── CONFIG ─── */
+const SERVER = window.location.origin;
+const W = 640, H = 480;
+const INTERVAL   = 150;       // ms between /predict posts
+const GAME_SECS  = 15;
+const MIN_FRAMES = 10;
+const CIRC       = 326.7;     // 2π × 52
+
+/* ─── STATE ─── */
+// live
+let mpL = null, streamL = null, rafL = null;
+let liveActive = false, liveTimer = null;
+let liveHandsIn = false, liveHandCount = 0, liveQuality = 1.0;
+
+// game
+let mpG = null, streamG = null, rafG = null;
+let gameActive = false, gameTimer = null, gameInterval = null;
+let gameElapsed = 0, gameFinished = false;
+let gameHandsIn = false, gameHandCount = 0, gameQuality = 1.0;
+
+/* ─── NAVIGATION ─── */
+function switchToGame() {
+  document.getElementById('view-live').classList.remove('active');
+  document.getElementById('view-game').classList.add('active');
+}
+function switchToLive() {
+  if (gameActive) gameStop();
+  document.getElementById('view-game').classList.remove('active');
+  document.getElementById('view-live').classList.add('active');
+}
+
+/* ─── MEDIAPIPE SETUP ───
+   Bug 3 fix: drive MP directly via requestAnimationFrame instead of the
+   Camera utility. The Camera utility caps its own internal rate; rAF runs
+   every display frame (~60fps) so keypoints update at full screen refresh rate.
+*/
+function makeMP(onResults) {
+  const h = new Hands({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}` });
+  h.setOptions({ maxNumHands:2, modelComplexity:1, minDetectionConfidence:.55, minTrackingConfidence:.5 });
+  h.onResults(onResults);
+  return h;
+}
+
+function startRaf(videoEl, mpInstance) {
+  let running = true;
+  async function loop() {
+    if (!running) return;
+    if (videoEl.readyState >= 2) {        // HAVE_CURRENT_DATA or better
+      await mpInstance.send({ image: videoEl });
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+  return () => { running = false; };   // returns stop function
+}
+
+/* ─── DRAW HANDS ───
+   Bug 3 fix: removed lm.visibility (doesn't exist in the JS Hands API —
+   it's a Pose landmark property). Removed globalAlpha manipulation entirely
+   so the canvas state is never dirtied.
+*/
+const TIPS = new Set([4,8,12,16,20]);
+
+function drawHands(canvas, res) {
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const detected = !!(res.multiHandLandmarks && res.multiHandLandmarks.length > 0);
+  if (!detected) return { detected:false, count:0, quality:0 };
+
+  const count = res.multiHandLandmarks.length;
+
+  res.multiHandLandmarks.forEach((lms, i) => {
+    const isLeft = res.multiHandedness[i].label === 'Right'; // MP camera flip
+    const cc = isLeft ? '#4f9cf9' : '#f97b4f';
+    const dc = isLeft ? '#a0c8f8' : '#f8b89a';
+
+    drawConnectors(ctx, lms, HAND_CONNECTIONS, { color: cc + '80', lineWidth: 1.5 });
+
+    lms.forEach((lm, j) => {
+      const x = lm.x * canvas.width;
+      const y = lm.y * canvas.height;
+      ctx.beginPath();
+      ctx.arc(x, y, TIPS.has(j) ? 5.5 : 3, 0, Math.PI * 2);
+      ctx.fillStyle = TIPS.has(j) ? cc : dc;
+      ctx.fill();
+      ctx.font = '8px DM Mono, monospace';
+      ctx.fillStyle = 'rgba(255,255,255,.4)';
+      ctx.fillText(j, x + 5, y - 2);
+    });
+
+    const wx = lms[0].x * canvas.width;
+    const wy = lms[0].y * canvas.height + 22;
+    ctx.font = '500 11px DM Mono, monospace';
+    ctx.fillStyle = cc;
+    ctx.fillText(isLeft ? 'LEFT' : 'RIGHT', wx - 20, wy);
+  });
+
+  // Quality: fraction of landmarks fully within frame (x,y in [0,1])
+  let inBounds = 0, total = 0;
+  res.multiHandLandmarks.forEach(lms => {
+    lms.forEach(lm => {
+      total++;
+      if (lm.x >= 0 && lm.x <= 1 && lm.y >= 0 && lm.y <= 1) inBounds++;
+    });
+  });
+  const quality = total > 0 ? inBounds / total : 0;
+
+  return { detected:true, count, quality };
+}
+
+/* ─── INFO BOX ─── */
+function setInfoBox(innerId, emptyId, warnings) {
+  const inner = document.getElementById(innerId);
+  const empty = document.getElementById(emptyId);
+  inner.querySelectorAll('.info-row').forEach(el => el.remove());
+  if (!warnings.length) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  warnings.forEach(w => {
+    const row = document.createElement('div');
+    row.className = 'info-row';
+    row.innerHTML = `<div class="info-dot ${w.type}"></div><span class="info-msg">${w.msg}</span>`;
+    inner.appendChild(row);
+  });
+}
+
+function computeWarnings(detected, count, quality, bufFrames, active) {
+  const w = [];
+  if (!active) return w;
+  if (!detected) { w.push({ type:'warn', msg:'No hands detected — show both hands to the camera' }); return w; }
+  if (count === 1) w.push({ type:'warn', msg:'Only one hand visible — both hands needed for accurate prediction' });
+  if (quality < 0.5)       w.push({ type:'err',  msg:'Hand feature quality low — improve lighting or move closer' });
+  else if (quality < 0.85) w.push({ type:'warn', msg:'Some landmarks near frame edge — keep hands fully visible' });
+  if (bufFrames > 0 && bufFrames < MIN_FRAMES) w.push({ type:'warn', msg:`Collecting frames (${bufFrames}/${MIN_FRAMES}) — hold still` });
+  if (!w.length && count === 2 && quality >= 0.85) w.push({ type:'ok', msg:'Both hands detected — good signal quality' });
+  return w;
+}
+
+/* ─── COUNTDOWN ─── */
+function countdown(wrapId, numId, n) {
+  return new Promise(resolve => {
+    const wrap = document.getElementById(wrapId);
+    const numEl = document.getElementById(numId);
+    numEl.textContent = n;
+    wrap.classList.add('show');
+    const t = setInterval(() => {
+      n--;
+      if (n <= 0) { clearInterval(t); wrap.classList.remove('show'); resolve(); }
+      else {
+        numEl.textContent = n;
+        numEl.style.animation = 'none';
+        void numEl.offsetWidth;
+        numEl.style.animation = '';
+      }
+    }, 1000);
+  });
+}
+
+/* ─── FRAME CAPTURE ─── */
+const _capCanvas = document.createElement('canvas');
+_capCanvas.width = W; _capCanvas.height = H;
+const _capCtx = _capCanvas.getContext('2d');
+
+function captureJpeg(videoEl) {
+  _capCtx.drawImage(videoEl, 0, 0, W, H);
+  return _capCanvas.toDataURL('image/jpeg', .72).split(',')[1];
+}
+
+async function serverReset() {
+  try { await fetch(`${SERVER}/reset`, { method:'POST' }); } catch(e) {}
+}
+
+/* ═══════════════════
+   LIVE MODE
+═══════════════════ */
+async function liveStart() {
+  const btn = document.getElementById('live-start-btn');
+  btn.disabled = true;
+  try {
+    if (!streamL) {
+      streamL = await navigator.mediaDevices.getUserMedia({ video:{ width:W, height:H } });
+      const vid = document.getElementById('webcam-live');
+      vid.srcObject = streamL;
+      vid.style.display = 'block';
+      document.getElementById('live-idle').style.display = 'none';
+      const kp = document.getElementById('kp-live');
+      kp.width = W; kp.height = H;
+      if (!mpL) mpL = makeMP(onLiveMP);
+      rafL = startRaf(vid, mpL);
+    }
+    await serverReset();
+    liveFreezeUI();
+    await countdown('live-cd', 'live-cd-n', 3);
+    liveActive = true;
+    document.getElementById('live-stop-btn').style.display = '';
+    document.getElementById('live-reset-btn').disabled = false;
+    setBadge('live-badge', 'live', 'live');
+    liveSetWaiting('show your hands…');
+    btn.textContent = 'Restart'; btn.disabled = false; btn.onclick = liveRestart;
+    liveTimer = setInterval(liveSendFrame, INTERVAL);
+  } catch(e) {
+    setBadge('live-badge', 'err', 'no camera');
+    btn.disabled = false; console.error(e);
+  }
+}
+
+async function liveRestart() {
+  clearInterval(liveTimer); liveTimer = null;
+  liveActive = false;
+  await serverReset();
+  liveFreezeUI();
+  await countdown('live-cd', 'live-cd-n', 3);
+  liveActive = true;
+  setBadge('live-badge', 'live', 'live');
+  liveSetWaiting('show your hands…');
+  liveTimer = setInterval(liveSendFrame, INTERVAL);
+}
+
+function liveStop() {
+  liveActive = false;
+  clearInterval(liveTimer); liveTimer = null;
+  if (rafL) { rafL(); rafL = null; }
+  if (streamL) { streamL.getTracks().forEach(t => t.stop()); streamL = null; }
+  mpL = null;
+  const vid = document.getElementById('webcam-live');
+  vid.style.display = 'none';
+  document.getElementById('kp-live').getContext('2d').clearRect(0, 0, W, H);
+  document.getElementById('live-idle').style.display = 'flex';
+  document.getElementById('live-stop-btn').style.display = 'none';
+  document.getElementById('live-reset-btn').disabled = true;
+  document.getElementById('live-nhtag').classList.remove('show');
+  const btn = document.getElementById('live-start-btn');
+  btn.textContent = 'Start Prediction'; btn.disabled = false; btn.onclick = liveStart;
+  setBadge('live-badge', '', 'idle');
+  liveFreezeUI();
+  liveSetWaiting('start prediction to begin');
+  setInfoBox('live-info-inner', 'live-info-empty', []);
+}
+
+async function liveReset() {
+  await serverReset();
+  liveFreezeUI();
+  liveSetWaiting('buffer cleared — show hands');
+  document.getElementById('live-buftag').textContent = '0 frames';
+}
+
+function onLiveMP(res) {
+  const canvas = document.getElementById('kp-live');
+  const { detected, count, quality } = drawHands(canvas, res);
+  liveHandsIn = detected; liveHandCount = count; liveQuality = quality;
+
+  const ltag = document.getElementById('live-ltag');
+  const rtag = document.getElementById('live-rtag');
+  ltag.className = 'ctag'; rtag.className = 'ctag';
+  if (detected) {
+    res.multiHandLandmarks.forEach((_, i) => {
+      const isLeft = res.multiHandedness[i].label === 'Right';
+      if (isLeft) ltag.classList.add('hand-left'); else rtag.classList.add('hand-right');
+    });
+  }
+  document.getElementById('live-nhtag').classList.toggle('show', liveActive && !detected);
+}
+
+async function liveSendFrame() {
+  if (!liveActive) { clearInterval(liveTimer); return; }
+  const bufs = parseInt(document.getElementById('live-buftag').textContent) || 0;
+  setInfoBox('live-info-inner', 'live-info-empty', computeWarnings(liveHandsIn, liveHandCount, liveQuality, bufs, liveActive));
+  if (!liveHandsIn) { document.getElementById('live-buftag').textContent = 'no hands — paused'; return; }
+  try {
+    const res  = await fetch(`${SERVER}/predict`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ frame: captureJpeg(document.getElementById('webcam-live')) }),
+    });
+    if (!liveActive) return;
+    const data = await res.json();
+    document.getElementById('live-buftag').textContent = `${data.num_frames_buffered} frames`;
+    liveUpdateUI(data);
+    setInfoBox('live-info-inner', 'live-info-empty', computeWarnings(liveHandsIn, liveHandCount, liveQuality, data.num_frames_buffered, liveActive));
+  } catch(e) {
+    if (liveActive) setBadge('live-badge', 'err', 'no server');
+  }
+}
+
+function liveUpdateUI(data) {
+  if (!data.ready) { liveSetWaiting(`collecting (${data.num_frames_buffered}/${MIN_FRAMES})…`); liveFreezeUI(); return; }
+  const pl = (data.prob_left*100).toFixed(1), pr = (data.prob_right*100).toFixed(1);
+  const P  = data.prediction === 'left' ? 'L' : 'R';
+  document.getElementById('live-fL').style.width  = pl + '%';
+  document.getElementById('live-fR').style.width  = pr + '%';
+  document.getElementById('live-cvL').textContent = pl + '%';
+  document.getElementById('live-cvR').textContent = pr + '%';
+  document.getElementById('live-crL').className = 'conf-row ' + (P==='L' ? '' : 'dim');
+  document.getElementById('live-crR').className = 'conf-row ' + (P==='R' ? '' : 'dim');
+  document.getElementById('live-cvL').classList.toggle('on', P==='L');
+  document.getElementById('live-cvR').classList.toggle('on', P==='R');
+  document.getElementById('live-verdict').className = 'verdict-inner ' + P;
+  document.getElementById('live-vhand').className   = 'v-hand ' + P;
+  document.getElementById('live-vhand').textContent = data.prediction.toUpperCase();
+  document.getElementById('live-vconf').textContent = `${(data.confidence*100).toFixed(1)}% confidence`;
+  document.getElementById('live-ptag').className   = 'ctag pred-' + data.prediction;
+  document.getElementById('live-ptag').textContent = data.prediction.toUpperCase() + ' HAND';
+  setBadge('live-badge', 'live', 'live');
+}
+
+function liveFreezeUI() {
+  document.getElementById('live-fL').style.width  = '50%';
+  document.getElementById('live-fR').style.width  = '50%';
+  document.getElementById('live-cvL').textContent = '—';
+  document.getElementById('live-cvR').textContent = '—';
+  document.getElementById('live-cvL').classList.remove('on');
+  document.getElementById('live-cvR').classList.remove('on');
+  document.getElementById('live-crL').className = 'conf-row frozen';
+  document.getElementById('live-crR').className = 'conf-row frozen';
+  document.getElementById('live-verdict').className = 'verdict-inner';
+  document.getElementById('live-ptag').className   = 'ctag';
+  document.getElementById('live-ptag').textContent = '—';
+}
+function liveSetWaiting(msg) {
+  document.getElementById('live-vhand').className   = 'v-hand pulse';
+  document.getElementById('live-vhand').textContent = '?';
+  document.getElementById('live-vconf').textContent = msg;
+}
+
+/* ═══════════════════
+   GAME MODE
+   Bug 1+2 fix: removed the duplicate newGameRound declaration and the dead
+   gameStart_inner function. There is now exactly ONE newGameRound that does
+   the full flow: reset → resetUI → countdown → begin recording.
+═══════════════════ */
+async function gameStart() {
+  document.getElementById('game-start-btn').disabled = true;
+  document.getElementById('game-stop-btn').disabled  = false;
+  document.getElementById('game-stop-hdr').style.display = '';
+  try {
+    if (!streamG) {
+      streamG = await navigator.mediaDevices.getUserMedia({ video:{ width:W, height:H } });
+      const vid = document.getElementById('webcam-game');
+      vid.srcObject = streamG;
+      vid.style.display = 'block';
+      document.getElementById('game-idle').style.display = 'none';
+      const kp = document.getElementById('kp-game');
+      kp.width = W; kp.height = H;
+      if (!mpG) mpG = makeMP(onGameMP);
+      rafG = startRaf(vid, mpG);
+    }
+    await serverReset();
+    gameResetUI();
+    await countdown('game-cd', 'game-cd-n', 3);
+    gameBeginRecording();
+  } catch(e) {
+    setBadge('game-badge', 'err', 'no camera');
+    document.getElementById('game-start-btn').disabled = false;
+    console.error(e);
+  }
+}
+
+/* Single authoritative function that starts the 15s recording.
+   Called by both gameStart (first round) and newGameRound (subsequent rounds). */
+function gameBeginRecording() {
+  gameActive   = true;
+  gameElapsed  = 0;
+  gameFinished = false;
+  document.getElementById('result-card').className = 'result-card';
+  setBadge('game-badge', 'game', 'recording');
+  document.getElementById('game-state-lbl').textContent = 'recording shuffle…';
+  document.getElementById('game-ptag').className   = 'ctag rec-tag';
+  document.getElementById('game-ptag').textContent = 'REC';
+  document.getElementById('game-prog-wrap').classList.add('show');
+  document.getElementById('game-prog').style.width = '0%';
+  document.getElementById('game-start-btn').disabled = true;
+  document.getElementById('game-stop-btn').disabled  = false;
+
+  gameInterval = setInterval(gameSendFrame, INTERVAL);
+  gameTimer = setInterval(() => {
+    gameElapsed++;
+    const rem  = GAME_SECS - gameElapsed;
+    const prog = gameElapsed / GAME_SECS;
+    document.getElementById('ring-num').textContent = rem;
+    document.getElementById('ring-track').style.strokeDashoffset = CIRC * prog;
+    document.getElementById('game-prog').style.width = (prog * 100) + '%';
+    document.getElementById('game-state-lbl').textContent =
+      rem > 0 ? `recording — ${rem}s remaining` : 'analysing…';
+    if (gameElapsed >= GAME_SECS) { clearInterval(gameTimer); gameTimer = null; gameFinish(); }
+  }, 1000);
+}
+
+async function gameFinish() {
+  clearInterval(gameInterval); gameInterval = null;
+  gameActive   = false;
+  gameFinished = true;
+  document.getElementById('game-prog-wrap').classList.remove('show');
+  document.getElementById('ring-track').style.strokeDashoffset = CIRC;
+  document.getElementById('ring-track').style.stroke = 'var(--ok)';
+  document.getElementById('ring-num').textContent = '✓';
+  document.getElementById('ring-num').style.color  = 'var(--ok)';
+  document.getElementById('game-ptag').className   = 'ctag';
+  document.getElementById('game-ptag').textContent = '—';
+  setBadge('game-badge', '', 'result');
+  document.getElementById('game-state-lbl').textContent = 'analysing 15s window…';
+
+  try {
+    const res  = await fetch(`${SERVER}/predict`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ frame: captureJpeg(document.getElementById('webcam-game')) }),
+    });
+    const data = await res.json();
+    if (data.ready) showGameResult(data);
+    else document.getElementById('game-state-lbl').textContent = 'not enough data — try again';
+  } catch(e) {
+    document.getElementById('game-state-lbl').textContent = 'server error';
+  }
+
+  /* Offer new round — clicking calls newGameRound which resets + records again */
+  document.getElementById('game-start-btn').textContent = 'New Round';
+  document.getElementById('game-start-btn').onclick     = newGameRound;
+  document.getElementById('game-start-btn').disabled    = false;
+  document.getElementById('game-stop-btn').disabled     = true;
+}
+
+function showGameResult(data) {
+  const pl = (data.prob_left*100).toFixed(1);
+  const pr = (data.prob_right*100).toFixed(1);
+  const P  = data.prediction === 'left' ? 'L' : 'R';
+  document.getElementById('g-fL').style.width  = pl + '%';
+  document.getElementById('g-fR').style.width  = pr + '%';
+  document.getElementById('g-cvL').textContent = pl + '%';
+  document.getElementById('g-cvR').textContent = pr + '%';
+  const rc = document.getElementById('result-card');
+  rc.className = 'result-card show ' + P;
+  document.getElementById('res-hand').className   = 'res-hand ' + P;
+  document.getElementById('res-hand').textContent = data.prediction.toUpperCase();
+  document.getElementById('res-conf').textContent = `${(data.confidence*100).toFixed(1)}% confidence`;
+  document.getElementById('game-state-lbl').textContent = 'prediction complete';
+  setBadge('game-badge', 'live', 'done');
+  document.getElementById('game-ptag').className   = 'ctag pred-' + data.prediction;
+  document.getElementById('game-ptag').textContent = data.prediction.toUpperCase() + ' HAND';
+}
+
+/* Single newGameRound — no duplicate, no dead code */
+async function newGameRound() {
+  document.getElementById('game-start-btn').disabled = true;
+  await serverReset();
+  gameResetUI();
+  await countdown('game-cd', 'game-cd-n', 3);
+  gameBeginRecording();   // directly begins recording — camera already open
+}
+
+function gameStop() {
+  gameActive = false;
+  clearInterval(gameTimer);    gameTimer    = null;
+  clearInterval(gameInterval); gameInterval = null;
+  if (rafG)    { rafG();    rafG    = null; }
+  if (streamG) { streamG.getTracks().forEach(t => t.stop()); streamG = null; }
+  mpG = null;
+  const vid = document.getElementById('webcam-game');
+  vid.style.display = 'none';
+  document.getElementById('kp-game').getContext('2d').clearRect(0, 0, W, H);
+  document.getElementById('game-idle').style.display = 'flex';
+  document.getElementById('game-prog-wrap').classList.remove('show');
+  document.getElementById('game-stop-hdr').style.display = 'none';
+  document.getElementById('game-stop-btn').disabled  = true;
+  document.getElementById('game-nhtag').classList.remove('show');
+  const btn = document.getElementById('game-start-btn');
+  btn.textContent = 'Start Round'; btn.onclick = gameStart; btn.disabled = false;
+  setBadge('game-badge', '', 'idle');
+  gameResetUI();
+  setInfoBox('game-info-inner', 'game-info-empty', []);
+}
+
+function onGameMP(res) {
+  const canvas = document.getElementById('kp-game');
+  const { detected, count, quality } = drawHands(canvas, res);
+  gameHandsIn = detected; gameHandCount = count; gameQuality = quality;
+
+  const ltag = document.getElementById('game-ltag');
+  const rtag = document.getElementById('game-rtag');
+  ltag.className = 'ctag'; rtag.className = 'ctag';
+  if (detected) {
+    res.multiHandLandmarks.forEach((_, i) => {
+      const isLeft = res.multiHandedness[i].label === 'Right';
+      if (isLeft) ltag.classList.add('hand-left'); else rtag.classList.add('hand-right');
+    });
+  }
+  document.getElementById('game-nhtag').classList.toggle('show', gameActive && !detected);
+  if (gameActive) setInfoBox('game-info-inner', 'game-info-empty', computeWarnings(detected, count, quality, gameElapsed * Math.round(1000/INTERVAL), gameActive));
+}
+
+async function gameSendFrame() {
+  if (!gameActive) { clearInterval(gameInterval); return; }
+  if (!gameHandsIn) { document.getElementById('game-buftag').textContent = 'no hands — paused'; return; }
+  try {
+    const res  = await fetch(`${SERVER}/predict`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ frame: captureJpeg(document.getElementById('webcam-game')) }),
+    });
+    if (!gameActive) return;
+    const data = await res.json();
+    document.getElementById('game-buftag').textContent = `${data.num_frames_buffered} frames`;
+  } catch(e) {}
+}
+
+function gameResetUI() {
+  document.getElementById('ring-num').textContent = GAME_SECS;
+  document.getElementById('ring-num').style.color = 'var(--game)';
+  document.getElementById('ring-track').style.strokeDashoffset = '0';
+  document.getElementById('ring-track').style.stroke = 'var(--game)';
+  document.getElementById('game-prog').style.width = '0%';
+  document.getElementById('game-state-lbl').textContent = 'ready to start';
+  document.getElementById('result-card').className = 'result-card';
+  document.getElementById('game-ptag').className   = 'ctag';
+  document.getElementById('game-ptag').textContent = '—';
+  document.getElementById('game-buftag').textContent = '—';
+}
+
+/* ─── UTILS ─── */
+function setBadge(id, cls, text) {
+  const el = document.getElementById(id);
+  el.className = 'sys-badge ' + cls;
+  el.textContent = text;
+}
+
+/* ─── HEALTH CHECK ─── */
+window.addEventListener('load', async () => {
+  try {
+    const d = await (await fetch(`${SERVER}/health`)).json();
+    const ok = d.model_loaded;
+    setBadge('live-badge', ok ? 'ok' : 'err', ok ? 'model ready' : 'no model');
+    setBadge('game-badge', ok ? 'ok' : 'err', ok ? 'model ready' : 'no model');
+    if (ok) setTimeout(() => { setBadge('live-badge','','idle'); setBadge('game-badge','','idle'); }, 2500);
+  } catch(e) {
+    setBadge('live-badge', 'err', 'no server');
+    setBadge('game-badge', 'err', 'no server');
+  }
+});
+</script>
+</body>
+</html>
