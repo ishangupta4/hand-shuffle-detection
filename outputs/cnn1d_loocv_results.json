@@ -1,0 +1,275 @@
+{
+  "model": "cnn1d",
+  "cv_type": "loocv",
+  "mean_accuracy": 0.8421052631578947,
+  "std_accuracy": 0.36464227527765836,
+  "mean_loss": 0.2915162728417579,
+  "folds": [
+    {
+      "fold": 0,
+      "val_ids": [
+        "00001"
+      ],
+      "accuracy": 1.0,
+      "loss": 0.3258339762687683,
+      "predictions": [
+        1
+      ],
+      "true_labels": [
+        1
+      ]
+    },
+    {
+      "fold": 1,
+      "val_ids": [
+        "00002"
+      ],
+      "accuracy": 1.0,
+      "loss": 0.004384428728371859,
+      "predictions": [
+        1
+      ],
+      "true_labels": [
+        1
+      ]
+    },
+    {
+      "fold": 2,
+      "val_ids": [
+        "00003"
+      ],
+      "accuracy": 0.0,
+      "loss": 0.7030240893363953,
+      "predictions": [
+        1
+      ],
+      "true_labels": [
+        0
+      ]
+    },
+    {
+      "fold": 3,
+      "val_ids": [
+        "00004"
+      ],
+      "accuracy": 1.0,
+      "loss": 0.0,
+      "predictions": [
+        0
+      ],
+      "true_labels": [
+        0
+      ]
+    },
+    {
+      "fold": 4,
+      "val_ids": [
+        "00005"
+      ],
+      "accuracy": 1.0,
+      "loss": 0.5455933809280396,
+      "predictions": [
+        0
+      ],
+      "true_labels": [
+        0
+      ]
+    },
+    {
+      "fold": 5,
+      "val_ids": [
+        "00006"
+      ],
+      "accuracy": 1.0,
+      "loss": 0.5564095377922058,
+      "predictions": [
+        1
+      ],
+      "true_labels": [
+        1
+      ]
+    },
+    {
+      "fold": 6,
+      "val_ids": [
+        "00007"
+      ],
+      "accuracy": 1.0,
+      "loss": 1.1920928244535389e-07,
+      "predictions": [
+        0
+      ],
+      "true_labels": [
+        0
+      ]
+    },
+    {
+      "fold": 7,
+      "val_ids": [
+        "00008"
+      ],
+      "accuracy": 0.0,
+      "loss": 0.8679410219192505,
+      "predictions": [
+        0
+      ],
+      "true_labels": [
+        1
+      ]
+    },
+    {
+      "fold": 8,
+      "val_ids": [
+        "00009"
+      ],
+      "accuracy": 1.0,
+      "loss": 0.5834051370620728,
+      "predictions": [
+        1
+      ],
+      "true_labels": [
+        1
+      ]
+    },
+    {
+      "fold": 9,
+      "val_ids": [
+        "00010"
+      ],
+      "accuracy": 1.0,
+      "loss": 0.014364410191774368,
+      "predictions": [
+        1
+      ],
+      "true_labels": [
+        1
+      ]
+    },
+    {
+      "fold": 10,
+      "val_ids": [
+        "00011"
+      ],
+      "accuracy": 1.0,
+      "loss": 0.24765145778656006,
+      "predictions": [
+        0
+      ],
+      "true_labels": [
+        0
+      ]
+    },
+    {
+      "fold": 11,
+      "val_ids": [
+        "00012"
+      ],
+      "accuracy": 1.0,
+      "loss": 5.364403477869928e-06,
+      "predictions": [
+        0
+      ],
+      "true_labels": [
+        0
+      ]
+    },
+    {
+      "fold": 12,
+      "val_ids": [
+        "00013"
+      ],
+      "accuracy": 0.0,
+      "loss": 0.8200268745422363,
+      "predictions": [
+        0
+      ],
+      "true_labels": [
+        1
+      ]
+    },
+    {
+      "fold": 13,
+      "val_ids": [
+        "00014"
+      ],
+      "accuracy": 1.0,
+      "loss": 3.099436753473128e-06,
+      "predictions": [
+        1
+      ],
+      "true_labels": [
+        1
+      ]
+    },
+    {
+      "fold": 14,
+      "val_ids": [
+        "00015"
+      ],
+      "accuracy": 1.0,
+      "loss": 0.6455788612365723,
+      "predictions": [
+        1
+      ],
+      "true_labels": [
+        1
+      ]
+    },
+    {
+      "fold": 15,
+      "val_ids": [
+        "00016"
+      ],
+      "accuracy": 1.0,
+      "loss": 7.510157047363464e-06,
+      "predictions": [
+        0
+      ],
+      "true_labels": [
+        0
+      ]
+    },
+    {
+      "fold": 16,
+      "val_ids": [
+        "00017"
+      ],
+      "accuracy": 1.0,
+      "loss": 0.2245485633611679,
+      "predictions": [
+        0
+      ],
+      "true_labels": [
+        0
+      ]
+    },
+    {
+      "fold": 17,
+      "val_ids": [
+        "00018"
+      ],
+      "accuracy": 1.0,
+      "loss": 2.861018856492592e-06,
+      "predictions": [
+        0
+      ],
+      "true_labels": [
+        0
+      ]
+    },
+    {
+      "fold": 18,
+      "val_ids": [
+        "00019"
+      ],
+      "accuracy": 1.0,
+      "loss": 2.8490614567999728e-05,
+      "predictions": [
+        0
+      ],
+      "true_labels": [
+        0
+      ]
+    }
+  ]
+}

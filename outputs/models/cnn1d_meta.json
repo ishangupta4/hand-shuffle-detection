@@ -1,0 +1,21 @@
+{
+  "model_kwargs": {
+    "input_dim": 39,
+    "filters": [
+      32,
+      64
+    ],
+    "kernel_sizes": [
+      5,
+      3
+    ],
+    "dropout_conv": 0.3,
+    "dropout_fc": 0.3
+  },
+  "target_length": 1120,
+  "loocv_mean_accuracy": 1.0,
+  "label_map": {
+    "left": 0,
+    "right": 1
+  }
+}
