@@ -1,0 +1,139 @@
+/* ═══ SPLASH VIEW ═══ */
+
+.splash-wrap{
+  display:flex;flex-direction:column;height:100%;
+  background:var(--bg);
+  background-image:radial-gradient(ellipse 90% 55% at 50% -5%, rgba(34,211,238,.07) 0%, transparent 65%);
+}
+
+.splash-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 40px;height:52px;flex-shrink:0;
+  border-bottom:1px solid var(--line);
+}
+
+.splash-content{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  padding:40px 24px;overflow:auto;
+}
+
+.splash-main{
+  display:flex;flex-direction:column;align-items:center;
+  gap:22px;max-width:620px;width:100%;
+}
+
+/* ── Eyebrow ── */
+.splash-eyebrow{
+  font-family:var(--mono);font-size:10px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--acc);opacity:.75;
+  text-align:center;
+}
+
+/* ── Headline ── */
+.splash-headline{
+  font-family:var(--mono);font-size:54px;font-weight:500;
+  letter-spacing:-.035em;color:var(--txt);text-align:center;
+  line-height:1.08;
+}
+
+/* ── Subtext ── */
+.splash-sub{
+  font-size:14px;font-weight:300;color:var(--txt2);
+  text-align:center;max-width:460px;line-height:1.7;
+}
+
+/* ── Cards ── */
+.splash-cards{display:flex;gap:14px;width:100%;max-width:520px}
+
+.splash-card{
+  flex:1;padding:26px 22px;border-radius:10px;
+  border:1px solid var(--line);background:var(--bg1);
+  cursor:pointer;
+  transition:border-color .25s,background .25s,transform .18s;
+  display:flex;flex-direction:column;gap:10px;
+  position:relative;overflow:hidden;
+}
+
+/* Top-edge shimmer on hover */
+.splash-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  opacity:0;transition:opacity .25s;
+}
+.card-game::before{background:linear-gradient(90deg,transparent 10%,var(--game) 50%,transparent 90%)}
+.card-live::before{background:linear-gradient(90deg,transparent 10%,var(--acc) 50%,transparent 90%)}
+
+.splash-card:hover{transform:translateY(-3px)}
+.splash-card:hover::before{opacity:1}
+
+.card-game{border-color:rgba(167,139,250,.18)}
+.card-game:hover{
+  border-color:rgba(167,139,250,.45);
+  background:linear-gradient(155deg,rgba(167,139,250,.08) 0%,var(--bg1) 55%);
+}
+
+.card-live{border-color:rgba(34,211,238,.18)}
+.card-live:hover{
+  border-color:rgba(34,211,238,.45);
+  background:linear-gradient(155deg,rgba(34,211,238,.08) 0%,var(--bg1) 55%);
+}
+
+/* Card icon */
+.card-icon-wrap{
+  width:38px;height:38px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:2px;flex-shrink:0;
+}
+.game-icon{background:rgba(167,139,250,.12);color:var(--game)}
+.live-icon{background:rgba(34,211,238,.12);color:var(--acc)}
+
+/* Card text */
+.card-label{
+  font-family:var(--mono);font-size:13px;font-weight:500;
+  letter-spacing:.03em;
+}
+.card-game .card-label{color:var(--game)}
+.card-live .card-label{color:var(--acc)}
+
+.card-desc{
+  font-size:12px;font-weight:300;color:var(--txt2);
+  line-height:1.6;flex:1;
+}
+
+.card-cta{
+  font-family:var(--mono);font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--txt3);
+  transition:color .2s;padding-top:2px;
+}
+.card-game:hover .card-cta{color:var(--game)}
+.card-live:hover .card-cta{color:var(--acc)}
+
+/* ── Stats row ── */
+.splash-stats{
+  display:flex;align-items:center;gap:0;
+  padding-top:18px;margin-top:2px;
+  border-top:1px solid var(--line);
+  width:100%;max-width:520px;justify-content:center;
+}
+
+.stat{
+  display:flex;flex-direction:column;align-items:center;
+  gap:4px;padding:0 24px;
+}
+
+.stat-val{
+  font-family:var(--mono);font-size:15px;font-weight:500;
+  color:var(--txt);letter-spacing:.02em;
+}
+
+.stat-lbl{
+  font-family:var(--mono);font-size:8px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--txt3);
+}
+
+.stat-sep{width:1px;height:30px;background:var(--line);flex-shrink:0}
+
+/* ── Logo clickable ── */
+.logo.link{cursor:pointer;transition:color .15s}
+.logo.link:hover{color:var(--acc)}
+.logo.link span{transition:color .15s}
+.logo.link:hover span{color:var(--txt2)}

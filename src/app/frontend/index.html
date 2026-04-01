@@ -12,18 +12,67 @@
 <link rel="stylesheet" href="css/layout.css"/>
 <link rel="stylesheet" href="css/components.css"/>
 <link rel="stylesheet" href="css/game.css"/>
+<link rel="stylesheet" href="css/splash.css"/>
 </head>
 <body>
 
+<!-- ═══ SPLASH ═══ -->
+<div class="view active" id="view-splash">
+  <div class="splash-wrap">
+    <header class="splash-hdr">
+      <span class="logo">HandShuffle<span>.ai</span></span>
+      <span class="sys-badge" id="splash-badge">checking</span>
+    </header>
+    <div class="splash-content">
+      <div class="splash-main">
+        <p class="splash-eyebrow">AI · Deception Detection · Hand Skeleton Analysis</p>
+        <h1 class="splash-headline">Can you fool<br>the model?</h1>
+        <p class="splash-sub">Hide an object in one hand and shuffle. The AI reads only your hand skeleton — no object tracking, no colour detection. Just biomechanics.</p>
+        <div class="splash-cards">
+          <div class="splash-card card-game" onclick="switchFromSplashToGame()">
+            <div class="card-icon-wrap game-icon">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                <polygon points="5,2 19,11 5,20" fill="currentColor"/>
+              </svg>
+            </div>
+            <div class="card-label">Detection Game</div>
+            <p class="card-desc">15-second shuffle challenge. Try to beat the model in a timed round.</p>
+            <span class="card-cta">Play Now →</span>
+          </div>
+          <div class="splash-card card-live" onclick="switchFromSplashToLive()">
+            <div class="card-icon-wrap live-icon">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                <path d="M1 11 Q3 5 5 11 Q7 17 9 11 Q11 5 13 11 Q15 17 17 11 Q19 5 21 11" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="card-label">Live Analysis</div>
+            <p class="card-desc">Real-time continuous inference from your webcam as you shuffle.</p>
+            <span class="card-cta">Open →</span>
+          </div>
+        </div>
+        <div class="splash-stats">
+          <div class="stat"><span class="stat-val">84%</span><span class="stat-lbl">Accuracy</span></div>
+          <div class="stat-sep"></div>
+          <div class="stat"><span class="stat-val">0.967</span><span class="stat-lbl">AUC</span></div>
+          <div class="stat-sep"></div>
+          <div class="stat"><span class="stat-val">CNN1D</span><span class="stat-lbl">Architecture</span></div>
+          <div class="stat-sep"></div>
+          <div class="stat"><span class="stat-val">39</span><span class="stat-lbl">Features</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ LIVE VIEW ═══ -->
-<div class="view active" id="view-live">
+<div class="view" id="view-live">
   <header class="hdr">
     <div class="hdr-left">
-      <span class="logo">HandShuffle<span>.ai</span></span>
+      <span class="logo link" onclick="switchToSplash()">HandShuffle<span>.ai</span></span>
       <span class="sys-badge" id="live-badge">idle</span>
     </div>
     <div class="hdr-right">
-      <button class="hdr-btn" onclick="switchToGame()">Start Detection Game</button>
+      <button class="hdr-btn game-accent" onclick="switchToGame()">Detection Game</button>
       <button class="hdr-btn danger" id="live-stop-btn" onclick="liveStop()" style="display:none">Stop Camera</button>
     </div>
   </header>
@@ -36,7 +85,7 @@
           <circle cx="28" cy="29" r="4" fill="#8b8fa8" opacity=".3"/>
           <rect x="20" y="7" width="16" height="7" rx="2.5" fill="#8b8fa8" opacity=".4"/>
         </svg>
-        <p>Click Start Live Prediction below</p>
+        <p>Click Start Prediction below</p>
       </div>
       <video id="webcam-live" class="cam-video" autoplay muted playsinline></video>
       <canvas id="kp-live" class="cam-canvas"></canvas>
@@ -90,11 +139,11 @@
 <div class="view" id="view-game">
   <header class="hdr">
     <div class="hdr-left">
-      <span class="logo">HandShuffle<span>.ai</span> <span style="color:var(--game);font-size:11px">/ detection game</span></span>
+      <span class="logo link" onclick="switchToSplash()">HandShuffle<span>.ai</span> <span style="color:var(--game);font-size:11px">/ game</span></span>
       <span class="sys-badge" id="game-badge">idle</span>
     </div>
     <div class="hdr-right">
-      <button class="hdr-btn" onclick="switchToLive()">← Live Mode</button>
+      <button class="hdr-btn accent" onclick="switchToLive()">Live Analysis</button>
       <button class="hdr-btn danger" id="game-stop-hdr" onclick="gameStop()" style="display:none">Stop Camera</button>
     </div>
   </header>

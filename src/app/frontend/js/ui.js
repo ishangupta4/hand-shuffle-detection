@@ -10,6 +10,9 @@ function setBadge(id, cls, text) {
 /* Info / warnings box */
 function setInfoBox(innerId, emptyId, warnings) {
   const inner = document.getElementById(innerId);
+  const sig = warnings.map(w => w.type + w.msg).join('\0');
+  if (inner.dataset.sig === sig) return;
+  inner.dataset.sig = sig;
   const empty = document.getElementById(emptyId);
   inner.querySelectorAll('.info-row').forEach(el => el.remove());
   if (!warnings.length) { empty.style.display = 'block'; return; }
@@ -29,7 +32,7 @@ function computeWarnings(detected, count, quality, bufFrames, active) {
   if (count === 1) w.push({ type: 'warn', msg: 'Only one hand visible — both hands needed for accurate prediction' });
   if (quality < 0.5)       w.push({ type: 'err',  msg: 'Hand feature quality low — improve lighting or move closer' });
   else if (quality < 0.85) w.push({ type: 'warn', msg: 'Some landmarks near frame edge — keep hands fully visible' });
-  if (bufFrames > 0 && bufFrames < MIN_FRAMES) w.push({ type: 'warn', msg: `Collecting frames (${bufFrames}/${MIN_FRAMES}) — hold still` });
+  if (bufFrames > 0 && bufFrames < MIN_FRAMES) w.push({ type: 'warn', msg: 'Collecting frames — keep hands visible' });
   if (!w.length && count === 2 && quality >= 0.85) w.push({ type: 'ok', msg: 'Both hands detected — good signal quality' });
   return w;
 }

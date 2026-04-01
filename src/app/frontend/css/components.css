@@ -33,26 +33,25 @@
 .pulse{animation:pulse 1.8s ease-in-out infinite}
 
 /* ── Info / system status box ── */
-.info-block{padding:14px 20px;border-top:1px solid var(--line)}
-.info-inner{border-radius:var(--r);border:1px solid var(--line);background:var(--bg);overflow:hidden}
-.info-row{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12px;font-weight:300;animation:fdin .2s ease}
+.info-block{padding:14px 20px;border-top:1px solid var(--line);flex-shrink:0}
+.info-inner{border-radius:var(--r);border:1px solid var(--line);background:var(--bg);overflow-x:hidden;overflow-y:auto;height:68px}
+.info-row{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12px;font-weight:300}
 .info-row:last-child{border-bottom:none}
-@keyframes fdin{from{opacity:0;transform:translateY(-2px)}to{opacity:1}}
 .info-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px}
 .info-dot.warn{background:var(--warn)}.info-dot.err{background:var(--right)}.info-dot.ok{background:var(--ok)}
 .info-msg{color:var(--txt2);line-height:1.45}
-.info-empty{padding:10px 12px;font-size:11px;color:var(--txt3);font-style:italic;font-family:var(--mono)}
+.info-empty{padding:0 12px;font-size:11px;color:var(--txt3);font-style:italic;font-family:var(--mono);height:100%;display:flex;align-items:center}
 
 /* ── Controls / buttons ── */
 .ctrl-row{padding:14px 20px;display:flex;gap:8px;border-top:1px solid var(--line)}
-.btn{flex:1;padding:9px 0;border-radius:var(--r);font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .15s;border:1px solid var(--line2);background:transparent;color:var(--txt2)}
+.btn{flex:1;padding:9px 0;border-radius:var(--r);font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .18s;border:1px solid var(--line2);background:transparent;color:var(--txt2)}
 .btn:hover:not(:disabled){background:var(--bg2);color:var(--txt)}
-.btn:disabled{opacity:.25;cursor:not-allowed}
-.btn.prim{background:var(--acc);color:#fff;border-color:var(--acc)}
-.btn.prim:hover:not(:disabled){background:#3a82d8}
-.btn.prim-game{background:var(--game);color:#fff;border-color:var(--game)}
-.btn.prim-game:hover:not(:disabled){background:#8b70e8}
-.btn.stop-btn{border-color:#4a2020;color:#f08080}
-.btn.stop-btn:hover:not(:disabled){background:#1a0808}
+.btn:disabled{opacity:.2;cursor:not-allowed}
+.btn.prim{background:var(--acc);color:var(--bg);border-color:var(--acc);box-shadow:0 0 20px rgba(34,211,238,.15)}
+.btn.prim:hover:not(:disabled){background:#06b6d4;box-shadow:0 0 24px rgba(34,211,238,.25)}
+.btn.prim-game{background:var(--game);color:var(--bg);border-color:var(--game);box-shadow:0 0 20px rgba(167,139,250,.15)}
+.btn.prim-game:hover:not(:disabled){background:#9170f0;box-shadow:0 0 24px rgba(167,139,250,.25)}
+.btn.stop-btn{border-color:rgba(251,146,60,.25);color:rgba(251,146,60,.6)}
+.btn.stop-btn:hover:not(:disabled){background:rgba(251,146,60,.07);border-color:rgba(251,146,60,.45);color:var(--right)}
 .btn.reset-btn{border-color:var(--line2);color:var(--txt3)}
 .btn.reset-btn:hover:not(:disabled){background:var(--bg2);color:var(--txt)}

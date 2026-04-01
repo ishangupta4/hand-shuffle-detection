@@ -40,8 +40,8 @@ function drawHands(canvas, res) {
 
   res.multiHandLandmarks.forEach((lms, i) => {
     const isLeft = res.multiHandedness[i].label === 'Right'; // MP camera flip
-    const cc = isLeft ? '#4f9cf9' : '#f97b4f';
-    const dc = isLeft ? '#a0c8f8' : '#f8b89a';
+    const cc = isLeft ? '#2563eb' : '#dc2626';
+    const dc = isLeft ? '#1d4ed8' : '#b91c1c';
 
     drawConnectors(ctx, lms, HAND_CONNECTIONS, { color: cc + '80', lineWidth: 1.5 });
 
@@ -52,16 +52,25 @@ function drawHands(canvas, res) {
       ctx.arc(x, y, TIPS.has(j) ? 5.5 : 3, 0, Math.PI * 2);
       ctx.fillStyle = TIPS.has(j) ? cc : dc;
       ctx.fill();
+      // Canvas has CSS scaleX(-1); apply inverse transform so text renders readable
+      ctx.save();
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
       ctx.font = '8px DM Mono, monospace';
       ctx.fillStyle = 'rgba(255,255,255,.4)';
-      ctx.fillText(j, x + 5, y - 2);
+      ctx.fillText(j, canvas.width - x - 5, y - 2);
+      ctx.restore();
     });
 
     const wx = lms[0].x * canvas.width;
     const wy = lms[0].y * canvas.height + 22;
+    ctx.save();
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
     ctx.font = '500 11px DM Mono, monospace';
     ctx.fillStyle = cc;
-    ctx.fillText(isLeft ? 'LEFT' : 'RIGHT', wx - 20, wy);
+    ctx.fillText(isLeft ? 'LEFT' : 'RIGHT', canvas.width - wx + 20, wy);
+    ctx.restore();
   });
 
   // Quality: fraction of landmarks fully within frame (x,y in [0,1])

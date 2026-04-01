@@ -31,5 +31,5 @@
 .g-fill.L{background:var(--left)}.g-fill.R{background:var(--right)}
 
 /* ── Game info + controls ── */
-.game-info-block{padding:14px 20px;border-top:1px solid var(--line)}
-.game-ctrl{padding:14px 20px;display:flex;gap:8px;border-top:1px solid var(--line)}
+.game-info-block{padding:14px 20px;border-top:1px solid var(--line);flex-shrink:0}
+.game-ctrl{padding:14px 20px;display:flex;gap:8px;border-top:1px solid var(--line);flex-shrink:0}

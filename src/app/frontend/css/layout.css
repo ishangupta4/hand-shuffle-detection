@@ -4,10 +4,14 @@
 .logo{font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:.06em}
 .logo span{color:var(--txt3)}
 .hdr-right{display:flex;gap:8px;align-items:center}
-.hdr-btn{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:6px 14px;border-radius:var(--r);cursor:pointer;transition:all .15s;border:1px solid var(--line2);background:transparent;color:var(--txt2)}
-.hdr-btn:hover{background:var(--bg2);color:var(--txt)}
-.hdr-btn.danger{border-color:#4a2020;color:#f08080}
-.hdr-btn.danger:hover{background:#2a1010;border-color:#7a3030}
+.hdr-btn{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:6px 14px;border-radius:var(--r);cursor:pointer;transition:all .18s;border:1px solid var(--line2);background:transparent;color:var(--txt2)}
+.hdr-btn:hover{background:var(--bg2);border-color:var(--line2);color:var(--txt)}
+.hdr-btn.accent{border-color:rgba(34,211,238,.3);color:var(--acc)}
+.hdr-btn.accent:hover{background:rgba(34,211,238,.08);border-color:rgba(34,211,238,.55)}
+.hdr-btn.game-accent{border-color:rgba(167,139,250,.3);color:var(--game)}
+.hdr-btn.game-accent:hover{background:rgba(167,139,250,.08);border-color:rgba(167,139,250,.55)}
+.hdr-btn.danger{border-color:rgba(251,146,60,.2);color:rgba(251,146,60,.7)}
+.hdr-btn.danger:hover{background:rgba(251,146,60,.08);border-color:rgba(251,146,60,.45);color:var(--right)}
 
 /* ── Body grid ── */
 .body{flex:1;display:grid;grid-template-columns:1fr 300px;overflow:hidden}
