@@ -1,0 +1,54 @@
+/* ── Header ── */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:52px;flex-shrink:0;background:var(--bg1);border-bottom:1px solid var(--line)}
+.hdr-left{display:flex;align-items:center;gap:16px}
+.logo{font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:.06em}
+.logo span{color:var(--txt3)}
+.hdr-right{display:flex;gap:8px;align-items:center}
+.hdr-btn{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:6px 14px;border-radius:var(--r);cursor:pointer;transition:all .15s;border:1px solid var(--line2);background:transparent;color:var(--txt2)}
+.hdr-btn:hover{background:var(--bg2);color:var(--txt)}
+.hdr-btn.danger{border-color:#4a2020;color:#f08080}
+.hdr-btn.danger:hover{background:#2a1010;border-color:#7a3030}
+
+/* ── Body grid ── */
+.body{flex:1;display:grid;grid-template-columns:1fr 300px;overflow:hidden}
+
+/* ── Camera panel ── */
+.cam-panel,.game-cam{position:relative;background:#080a0e;overflow:hidden}
+.cam-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;transform:scaleX(-1)}
+.cam-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;transform:scaleX(-1)}
+.cam-idle{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.cam-idle svg{opacity:.15}
+.cam-idle p{font-size:13px;font-weight:300;color:var(--txt3)}
+
+/* ── Countdown overlay ── */
+.cd-overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(8,10,14,.75);pointer-events:none}
+.cd-overlay.show{display:flex}
+.cd-num{font-family:var(--mono);font-size:112px;font-weight:500;color:#fff;line-height:1;animation:cpop .8s ease-out}
+.cd-sub{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--txt3)}
+@keyframes cpop{0%{transform:scale(1.5);opacity:0}40%{transform:scale(1);opacity:1}100%{transform:scale(.92);opacity:.8}}
+
+/* ── Camera overlay tags ── */
+.cam-tl,.cam-tr,.cam-bl,.cam-br{position:absolute;pointer-events:none}
+.cam-tl{top:14px;left:16px;display:flex;gap:6px}
+.cam-tr{top:14px;right:16px}
+.cam-bl{bottom:14px;left:16px}
+.cam-br{bottom:14px;right:16px}
+.ctag{font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:3px;background:rgba(13,15,20,.7);border:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.3);transition:all .2s}
+.ctag.hand-left{color:#7dc4f8;border-color:rgba(125,196,248,.3)}
+.ctag.hand-right{color:#f8a07d;border-color:rgba(248,160,125,.3)}
+.ctag.pred-left{color:var(--left);border-color:rgba(79,156,249,.4);background:rgba(14,32,64,.8)}
+.ctag.pred-right{color:var(--right);border-color:rgba(249,123,79,.4);background:rgba(61,26,10,.8)}
+.ctag.rec-tag{color:#4fcf8a;border-color:rgba(79,207,138,.4);background:rgba(10,45,28,.8)}
+.buf-label{font-family:var(--mono);font-size:9px;color:var(--txt3)}
+.nh-label{font-family:var(--mono);font-size:9px;color:var(--warn);opacity:0;transition:opacity .3s;letter-spacing:.08em}
+.nh-label.show{opacity:1}
+
+/* ── Game progress bar ── */
+#game-prog-wrap{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.06);display:none}
+#game-prog-wrap.show{display:block}
+#game-prog{height:100%;width:0%;background:var(--game);transition:width .2s linear}
+
+/* ── Right panel shell ── */
+.rpanel,.game-rpanel{background:var(--bg1);border-left:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+.rblock{padding:18px 20px;border-bottom:1px solid var(--line)}
+.rlabel{font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--txt3);margin-bottom:14px}

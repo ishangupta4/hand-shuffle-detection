@@ -1,0 +1,35 @@
+/* ── Game status panel ── */
+.game-status-block{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:18px}
+.game-state-label{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--txt3)}
+
+/* ── Progress ring ── */
+.ring-wrap{position:relative;width:120px;height:120px}
+.ring-wrap svg{transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:var(--bg3);stroke-width:4}
+.ring-track{fill:none;stroke:var(--game);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .2s linear,stroke .5s}
+.ring-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:32px;font-weight:500;color:var(--game);transition:color .5s}
+
+/* ── Result card ── */
+.result-card{width:100%;border-radius:var(--r);border:1px solid var(--line);background:var(--bg);padding:20px;display:none;flex-direction:column;align-items:center;gap:8px;transition:border-color .3s,background .3s}
+.result-card.show{display:flex}
+.result-card.L{border-color:rgba(79,156,249,.4);background:var(--left-bg)}
+.result-card.R{border-color:rgba(249,123,79,.4);background:var(--right-bg)}
+.res-label{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--txt3)}
+.res-hand{font-family:var(--mono);font-size:52px;font-weight:500;letter-spacing:-.02em}
+.res-hand.L{color:var(--left)}.res-hand.R{color:var(--right)}
+.res-conf{font-size:13px;font-weight:300;color:var(--txt2)}
+
+/* ── Game confidence mini-bars ── */
+.game-conf-block{width:100%;display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.g-conf-row{display:flex;flex-direction:column;gap:4px}
+.g-conf-top{display:flex;justify-content:space-between}
+.g-cname{font-family:var(--mono);font-size:10px;font-weight:500;text-transform:uppercase}
+.g-cname.L{color:var(--left)}.g-cname.R{color:var(--right)}
+.g-cval{font-family:var(--mono);font-size:10px;color:var(--txt3)}
+.g-track{height:3px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.g-fill{height:100%;border-radius:2px;transition:width .4s ease;width:50%}
+.g-fill.L{background:var(--left)}.g-fill.R{background:var(--right)}
+
+/* ── Game info + controls ── */
+.game-info-block{padding:14px 20px;border-top:1px solid var(--line)}
+.game-ctrl{padding:14px 20px;display:flex;gap:8px;border-top:1px solid var(--line)}
