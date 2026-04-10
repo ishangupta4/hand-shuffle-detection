@@ -12,3 +12,13 @@ let gameActive = false, gameTimer = null, gameInterval = null;
 let gameElapsed = 0, gameFinished = false;
 let gameHandsIn = false, gameHandCount = 0, gameQuality = 1.0;
 let _gameStartId = 0;  // incremented on gameStop() to cancel in-flight async starts
+
+// contributor mode
+let mpC = null, streamC = null, rafC = null;
+let contribRecording = false, contribTimer = null, contribInterval = null;
+let contribElapsed = 0;
+let contribHandsIn = false, contribHandCount = 0;
+let contribLatestMP = null;
+let contribSessionId = null, contribConsentId = null, contribVideoId = null;
+let contribKpHistory = [], contribMaskHistory = [];
+let _contribStartId = 0;  // incremented on contribStop() to cancel in-flight async starts

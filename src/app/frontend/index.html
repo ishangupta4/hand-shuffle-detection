@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="css/components.css"/>
 <link rel="stylesheet" href="css/game.css"/>
 <link rel="stylesheet" href="css/splash.css"/>
+<link rel="stylesheet" href="css/contributor.css"/>
 </head>
 <body>
 
@@ -48,6 +49,17 @@
             <div class="card-label">Live Analysis</div>
             <p class="card-desc">Real-time continuous inference from your webcam as you shuffle.</p>
             <span class="card-cta">Open →</span>
+          </div>
+          <div class="splash-card card-contrib" onclick="switchFromSplashToContrib()">
+            <div class="card-icon-wrap contrib-icon">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                <circle cx="11" cy="11" r="9" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M11 7v4l3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="card-label">Contribute Data</div>
+            <p class="card-desc">Record a labeled shuffle session to help train future model versions.</p>
+            <span class="card-cta">Contribute →</span>
           </div>
         </div>
         <div class="splash-stats">
@@ -213,12 +225,192 @@
   </div>
 </div>
 
+<!-- ═══ CONTRIBUTOR VIEW ═══ -->
+<div class="view" id="view-contrib">
+  <header class="hdr">
+    <div class="hdr-left">
+      <span class="logo link" onclick="switchToSplash()">HandShuffle<span>.ai</span> <span style="color:var(--ok);font-size:11px">/ contribute</span></span>
+      <span class="sys-badge" id="contrib-badge">idle</span>
+    </div>
+    <div class="hdr-right">
+      <button class="hdr-btn game-accent" onclick="switchToGame()">Detection Game</button>
+      <button class="hdr-btn accent" onclick="switchToLive()">Live Analysis</button>
+      <button class="hdr-btn danger" id="contrib-stop-hdr" onclick="contribStop()" style="display:none">Stop Camera</button>
+    </div>
+  </header>
+
+  <div class="body">
+    <!-- Camera panel -->
+    <div class="cam-panel" style="position:relative">
+      <div class="cam-idle" id="contrib-idle-cam">
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+          <rect x="4" y="12" width="48" height="34" rx="5" stroke="#8b8fa8" stroke-width="1.5"/>
+          <circle cx="28" cy="29" r="10" stroke="#8b8fa8" stroke-width="1.5"/>
+          <circle cx="28" cy="29" r="4" fill="#8b8fa8" opacity=".3"/>
+          <rect x="20" y="7" width="16" height="7" rx="2.5" fill="#8b8fa8" opacity=".4"/>
+        </svg>
+        <p>Click Start Contributing below</p>
+      </div>
+      <video id="webcam-contrib" class="cam-video" autoplay muted playsinline></video>
+      <canvas id="kp-contrib" class="cam-canvas"></canvas>
+      <div class="cd-overlay" id="contrib-cd">
+        <span class="cd-num" id="contrib-cd-n">3</span>
+        <span class="cd-sub">get ready to shuffle</span>
+      </div>
+      <div class="cam-tl">
+        <div class="ctag" id="contrib-ltag">Left</div>
+        <div class="ctag" id="contrib-rtag">Right</div>
+      </div>
+      <div class="cam-br"><span class="nh-label" id="contrib-nhtag">NO HANDS</span></div>
+      <div id="contrib-prog-wrap"><div id="contrib-prog"></div></div>
+    </div>
+
+    <!-- Right panel — phase-driven -->
+    <div class="contrib-rpanel">
+
+      <!-- Phase: idle -->
+      <div class="contrib-phase" id="contrib-p-idle" style="display:flex">
+        <div class="contrib-idle-inner">
+          <div class="contrib-idle-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <circle cx="11" cy="11" r="9" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M11 6v5l3.5 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="contrib-idle-title">Contribute Training Data</div>
+          <p class="contrib-idle-desc">Help improve the model by recording a labeled shuffle session.</p>
+          <div class="contrib-steps">
+            <div class="contrib-step">
+              <span class="contrib-step-num">01</span>
+              <span class="contrib-step-txt">Pick up a small object and hide it in one hand</span>
+            </div>
+            <div class="contrib-step">
+              <span class="contrib-step-num">02</span>
+              <span class="contrib-step-txt">Show both hands to the camera and shuffle for 15 seconds</span>
+            </div>
+            <div class="contrib-step">
+              <span class="contrib-step-num">03</span>
+              <span class="contrib-step-txt">Tell us which hand held the object at the start and end</span>
+            </div>
+          </div>
+        </div>
+        <div class="ctrl-row">
+          <button class="btn prim-contrib" id="contrib-start-btn" onclick="contribOpenConsent()">Start Contributing</button>
+        </div>
+      </div>
+
+      <!-- Phase: recording -->
+      <div class="contrib-phase" id="contrib-p-rec" style="display:none">
+        <div class="contrib-rec-inner">
+          <span class="contrib-rec-status" id="contrib-rec-status">get ready</span>
+          <div class="contrib-rec-ring">
+            <svg width="100" height="100" viewBox="0 0 100 100">
+              <circle class="contrib-ring-bg" cx="50" cy="50" r="42"/>
+              <circle class="contrib-ring-track" id="contrib-ring-track" cx="50" cy="50" r="42" stroke-dasharray="263.9" stroke-dashoffset="0"/>
+            </svg>
+            <div class="contrib-ring-num" id="contrib-ring-num">15</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase: review -->
+      <div class="contrib-phase" id="contrib-p-review" style="display:none">
+        <div class="contrib-review-inner">
+          <div class="contrib-review-title">Preview Recording</div>
+          <div class="contrib-skeleton-wrap">
+            <canvas id="contrib-skeleton-canvas" class="contrib-skeleton-canvas"></canvas>
+            <button class="contrib-replay-btn" onclick="contribReplay()">Replay</button>
+          </div>
+        </div>
+        <div class="ctrl-row">
+          <button class="btn prim-contrib" onclick="contribGoToLabel()">Next: Label Session →</button>
+        </div>
+      </div>
+
+      <!-- Phase: labeling -->
+      <div class="contrib-phase" id="contrib-p-label" style="display:none">
+        <div class="contrib-label-inner">
+          <div class="rlabel">Label Your Session</div>
+          <div class="contrib-label-q">
+            <p class="contrib-label-q-text">Which hand held the object at the <strong>start</strong>?</p>
+            <div class="hand-select-row">
+              <button class="hand-btn L" id="chl-start-L" onclick="contribSelectHand('start','left')">Left</button>
+              <button class="hand-btn R" id="chl-start-R" onclick="contribSelectHand('start','right')">Right</button>
+            </div>
+          </div>
+          <div class="contrib-label-q">
+            <p class="contrib-label-q-text">Which hand held the object at the <strong>end</strong>?</p>
+            <div class="hand-select-row">
+              <button class="hand-btn L" id="chl-end-L" onclick="contribSelectHand('end','left')">Left</button>
+              <button class="hand-btn R" id="chl-end-R" onclick="contribSelectHand('end','right')">Right</button>
+            </div>
+          </div>
+          <span class="contrib-label-err" id="contrib-label-err">Select both hands before submitting</span>
+        </div>
+        <div class="ctrl-row">
+          <button class="btn" onclick="contribGoToLabel()">← Review Again</button>
+          <button class="btn prim-contrib" id="contrib-submit-btn" onclick="contribSubmitLabel()">Submit</button>
+        </div>
+      </div>
+
+      <!-- Phase: done -->
+      <div class="contrib-phase" id="contrib-p-done" style="display:none">
+        <div class="contrib-done-inner">
+          <div class="contrib-done-icon">&#10003;</div>
+          <div class="contrib-done-title">Thank you!</div>
+          <p class="contrib-done-sub">Your session has been saved and will help improve the model.</p>
+          <span class="contrib-vid-id" id="contrib-done-vid">Video ID: —</span>
+        </div>
+        <div class="ctrl-row">
+          <button class="btn" onclick="switchToSplash()">Back to Menu</button>
+          <button class="btn prim-contrib" onclick="contribPlayAgain()">Contribute Again</button>
+        </div>
+      </div>
+
+    </div><!-- /contrib-rpanel -->
+  </div><!-- /body -->
+
+  <!-- Consent modal -->
+  <div class="contrib-modal-overlay" id="contrib-modal">
+    <div class="contrib-modal">
+      <div class="contrib-modal-header">
+        <span class="contrib-modal-title">Contribute to the Dataset</span>
+        <button class="contrib-modal-close" onclick="contribConsentDecline()">&times;</button>
+      </div>
+      <div class="contrib-modal-body">
+        <p>Before recording, please review what data will be collected and how it is stored.</p>
+        <div class="contrib-modal-bullets">
+          <div class="contrib-modal-bullet">
+            <div class="contrib-modal-bullet-dot"></div>
+            <p><strong>What is collected:</strong> Hand skeleton keypoints (21 landmarks per hand) and a privacy-masked video where only your hands are visible — no face, no background.</p>
+          </div>
+          <div class="contrib-modal-bullet">
+            <div class="contrib-modal-bullet-dot"></div>
+            <p><strong>How it is stored:</strong> Saved locally on this server in the <code>user-data/</code> directory. It is never shared without your additional consent.</p>
+          </div>
+          <div class="contrib-modal-bullet">
+            <div class="contrib-modal-bullet-dot"></div>
+            <p><strong>Withdrawal:</strong> You may stop the recording at any time by clicking Stop Camera. Sessions that are not submitted are discarded.</p>
+          </div>
+        </div>
+      </div>
+      <div class="contrib-modal-footer">By clicking I Agree you consent to the data collection described above.</div>
+      <div class="contrib-modal-actions">
+        <button class="btn" style="flex:1" onclick="contribConsentDecline()">Cancel</button>
+        <button class="btn prim-contrib" style="flex:1" onclick="contribConsentAccept()">I Agree</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /view-contrib -->
+
 <script src="js/config.js"></script>
 <script src="js/state.js"></script>
 <script src="js/mediapipe.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/live.js"></script>
 <script src="js/game.js"></script>
+<script src="js/contributor.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
