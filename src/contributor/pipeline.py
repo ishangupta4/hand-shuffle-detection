@@ -1,7 +1,6 @@
 """Orchestrates recorder → masking → storage → labels for a contributor session."""
 
 import datetime
-import tempfile
 import threading
 from pathlib import Path
 
@@ -35,16 +34,23 @@ class Pipeline:
         if mode in ("npy_only", "both"):
             self.storage.save_keypoints(session.video_id, kp_array, mask_array, meta)
 
-        if mode in ("video_only", "both") and session.frames:
-            with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as tmp:
-                tmp_path = Path(tmp.name)
-            masker = Masker(self.cfg.recording.hand_mask_padding_px)
-            self._recorder.build_masked_video(session, tmp_path, masker)
-            self.storage.save_video(session.video_id, tmp_path)
-            try:
-                tmp_path.unlink()
-            except Exception:
-                pass
+        if mode in ("video_only", "both"):
+            preview = Path(session.preview_path) if session.preview_path else None
+            if preview and preview.exists() and preview.stat().st_size > 0:
+                # Reuse the pre-built preview — just move it, no rebuild needed.
+                self.storage.save_video(session.video_id, preview)
+            elif session.frames:
+                # Fallback: build from frames if preview was never created.
+                import tempfile
+                with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as tmp:
+                    tmp_path = Path(tmp.name)
+                masker = Masker(self.cfg.recording.hand_mask_padding_px)
+                self._recorder.build_masked_video(session, tmp_path, masker)
+                self.storage.save_video(session.video_id, tmp_path)
+                try:
+                    tmp_path.unlink()
+                except Exception:
+                    pass
 
         self.storage.save_labels(
             session.video_id,

@@ -17,7 +17,13 @@ function switchToSplash() {
   document.getElementById('view-game').classList.remove('active');
   document.getElementById('view-live').classList.remove('active');
   document.getElementById('view-contrib').classList.remove('active');
+  document.getElementById('view-contrib-review').classList.remove('active');
   document.getElementById('view-splash').classList.add('active');
+}
+
+function switchToContribReview() {
+  document.getElementById('view-contrib').classList.remove('active');
+  document.getElementById('view-contrib-review').classList.add('active');
 }
 
 function switchToGame() {

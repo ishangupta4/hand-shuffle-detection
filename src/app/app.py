@@ -26,7 +26,7 @@ import cv2
 import numpy as np
 import torch
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -187,6 +187,8 @@ class ContributorState:
         return f"{ts}_{prefix}"
 
 contrib_state = ContributorState()
+
+PREVIEW_DIR = PROJECT_ROOT / "user-data" / "previews"
 
 
 # ---------------------------------------------------------------------------
@@ -407,33 +409,53 @@ def _contrib_frame_sync(req: ContributorFrameRequest):
 
 @app.post("/contributor/stop")
 async def contributor_stop(req: ContributorStopRequest):
+    from starlette.concurrency import run_in_threadpool
+    return await run_in_threadpool(_contrib_stop_sync, req)
+
+
+def _contrib_stop_sync(req: ContributorStopRequest):
     session = contrib_state.sessions.get(req.session_id)
     if not session:
-        return {"frame_count": 0, "duration_seconds": 0, "preview_available": False}
+        return {"frame_count": 0, "preview_url": None}
     session.recording = False
-    fps = contrib_state.cfg.recording.fps if contrib_state.cfg else 15
-    duration = round(session.frame_count / max(fps, 1), 1)
-    return {
-        "frame_count": session.frame_count,
-        "duration_seconds": duration,
-        "preview_available": len(session.keypoints) > 0,
-    }
+
+    preview_url = None
+    if session.frames and contrib_state.cfg and contrib_state.pipeline:
+        try:
+            from src.contributor.masking import Masker
+            PREVIEW_DIR.mkdir(parents=True, exist_ok=True)
+            preview_path = PREVIEW_DIR / f"{req.session_id}.mp4"
+            masker = Masker(contrib_state.cfg.recording.hand_mask_padding_px)
+            contrib_state.pipeline._recorder.build_masked_video(session, preview_path, masker)
+            if preview_path.exists() and preview_path.stat().st_size > 0:
+                session.preview_path = str(preview_path)
+                session.frames.clear()   # free RAM — video is on disk now
+                preview_url = f"/contributor/preview-video/{req.session_id}"
+            else:
+                print(f"  Preview: file missing or empty after build")
+        except Exception as e:
+            print(f"Preview build error: {e}")
+
+    return {"frame_count": session.frame_count, "preview_url": preview_url}
 
 
-@app.get("/contributor/preview/{session_id}")
-async def contributor_preview(session_id: str):
-    session = contrib_state.sessions.get(session_id)
-    if not session or not session.keypoints:
-        return {"preview_type": "none", "fps": 15, "data": None}
-    fps = contrib_state.cfg.recording.fps if contrib_state.cfg else 15
-    max_frames = fps * 3
-    kp_data = [kp.tolist() for kp in session.keypoints[:max_frames]]
-    mask_data = [mk.tolist() for mk in session.masks[:max_frames]]
-    return {
-        "preview_type": "skeleton",
-        "fps": fps,
-        "data": {"keypoints": kp_data, "masks": mask_data},
-    }
+@app.post("/contributor/discard")
+async def contributor_discard(req: ContributorStopRequest):
+    session = contrib_state.sessions.pop(req.session_id, None)
+    if session and session.preview_path:
+        try:
+            Path(session.preview_path).unlink(missing_ok=True)
+        except Exception:
+            pass
+    return {"ok": True}
+
+
+@app.get("/contributor/preview-video/{session_id}")
+async def contributor_preview_video(session_id: str):
+    preview_path = PREVIEW_DIR / f"{session_id}.mp4"
+    if not preview_path.exists():
+        raise HTTPException(status_code=404, detail="Preview not found")
+    return FileResponse(str(preview_path), media_type="video/mp4")
 
 
 @app.post("/contributor/label")

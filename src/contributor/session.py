@@ -15,3 +15,4 @@ class ContributorSession:
     frame_count: int = 0
     recording: bool = True
     finalized: bool = False
+    preview_path: str = ""   # path to pre-built masked video; reused at label time

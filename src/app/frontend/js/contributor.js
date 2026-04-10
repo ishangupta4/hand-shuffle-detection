@@ -2,10 +2,10 @@
    CONTRIBUTOR MODE
 ═══════════════════ */
 
-/* ─── UX phase management ─── */
+/* ─── UX phase management (view-contrib only: idle, rec, done) ─── */
 
 function contribShowPhase(phase) {
-  ['idle', 'rec', 'review', 'label', 'done'].forEach(p => {
+  ['idle', 'rec', 'done'].forEach(p => {
     const el = document.getElementById('contrib-p-' + p);
     if (el) el.style.display = p === phase ? 'flex' : 'none';
   });
@@ -60,7 +60,6 @@ async function _contribBeginSession() {
   const myId = ++_contribStartId;
   document.getElementById('contrib-start-btn').disabled = true;
 
-  // Switch to rec phase immediately so the user sees something is happening
   contribShowPhase('rec');
   document.getElementById('contrib-stop-hdr').style.display = '';
   setBadge('contrib-badge', '', 'starting\u2026');
@@ -149,98 +148,101 @@ async function _contribFinishRecording() {
   document.getElementById('contrib-ring-track').style.stroke = 'var(--ok)';
   document.getElementById('contrib-ring-num').textContent = '\u2713';
   document.getElementById('contrib-ring-num').style.color = 'var(--ok)';
-  setBadge('contrib-badge', '', 'reviewing');
+  setBadge('contrib-badge', '', 'processing\u2026');
+  document.getElementById('contrib-rec-status').textContent = 'building preview\u2026';
 
+  // Stop server recording — server builds masked video during this call
+  let previewUrl = null;
   try {
-    await fetch(`${SERVER}/contributor/stop`, {
+    const res = await fetch(`${SERVER}/contributor/stop`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session_id: contribSessionId }),
     });
+    const data = await res.json();
+    previewUrl = data.preview_url || null;
   } catch(e) {}
 
-  contribShowPhase('review');
-  _contribStartSkeletonReplay();
-}
+  // Stop camera + RAF (no longer needed)
+  if (rafC) { rafC(); rafC = null; }
+  if (streamC) { streamC.getTracks().forEach(t => t.stop()); streamC = null; }
+  mpC = null;
 
-/* ─── Skeleton preview animation ─── */
+  const vid = document.getElementById('webcam-contrib');
+  if (vid) vid.style.display = 'none';
+  const idle = document.getElementById('contrib-idle-cam');
+  if (idle) idle.style.display = 'flex';
+  const kpCanvas = document.getElementById('kp-contrib');
+  if (kpCanvas) kpCanvas.getContext('2d').clearRect(0, 0, kpCanvas.width, kpCanvas.height);
+  document.getElementById('contrib-stop-hdr').style.display = 'none';
+  document.getElementById('contrib-nhtag').classList.remove('show');
 
-let _contribReplayId = 0;
+  // Reset review view
+  const loading  = document.getElementById('contrib-review-loading');
+  const playback = document.getElementById('contrib-playback');
+  if (playback) { playback.src = ''; playback.style.display = 'none'; }
+  if (loading)  loading.style.display = 'flex';
 
-function _contribStartSkeletonReplay() {
-  const myReplay = ++_contribReplayId;
-  const canvas = document.getElementById('contrib-skeleton-canvas');
-  if (!canvas) return;
-
-  // Size canvas to match its displayed size
-  const rect = canvas.parentElement.getBoundingClientRect();
-  canvas.width  = rect.width  || 220;
-  canvas.height = rect.height || 120;
-
-  const ctx = canvas.getContext('2d');
-  const kpData = contribKpHistory.slice(0, contribKpHistory.length);
-  const mkData = contribMaskHistory.slice(0, contribMaskHistory.length);
-  const total  = kpData.length;
-  if (total === 0) return;
-
-  let frame = 0;
-  function step() {
-    if (_contribReplayId !== myReplay) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (frame >= total) { frame = 0; }
-
-    const kp = kpData[frame];
-    const mk = mkData[frame];
-    for (let h = 0; h < 2; h++) {
-      if (!mk[h]) continue;
-      const color = h === 0 ? '#38bdf8' : '#fb923c';
-      kp[h].forEach((lm, j) => {
-        const x = lm[0] * canvas.width;
-        const y = lm[1] * canvas.height;
-        ctx.beginPath();
-        ctx.arc(x, y, j === 0 ? 4 : 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = color;
-        ctx.globalAlpha = j === 0 ? 1 : 0.7;
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      });
-    }
-    frame++;
-    setTimeout(() => requestAnimationFrame(step), 80);
-  }
-  requestAnimationFrame(step);
-}
-
-function contribReplay() {
-  _contribStartSkeletonReplay();
-}
-
-/* ─── Labeling ─── */
-
-let _contribStartSel = null, _contribEndSel = null;
-
-function contribGoToLabel() {
-  _contribStartSel = null;
-  _contribEndSel   = null;
-  ['start-L', 'start-R', 'end-L', 'end-R'].forEach(id => {
-    const el = document.getElementById('chl-' + id);
-    if (el) el.classList.remove('sel');
-  });
+  document.getElementById('sel-start-hand').value = '';
+  document.getElementById('sel-end-hand').value   = '';
   document.getElementById('contrib-label-err').classList.remove('show');
-  contribShowPhase('label');
-  setBadge('contrib-badge', '', 'labeling');
+  document.getElementById('contrib-submit-btn').disabled = false;
+
+  // Switch to review page
+  switchToContribReview();
+  setBadge('contrib-review-badge', '', 'review');
+
+  // Load video
+  if (previewUrl && playback) {
+    playback.src = `${SERVER}${previewUrl}`;
+    playback.oncanplay = () => {
+      if (loading) loading.style.display = 'none';
+      playback.style.display = 'block';
+      playback.play().catch(() => {});
+    };
+    playback.onerror = () => {
+      if (loading) loading.textContent = 'Preview unavailable';
+    };
+  } else if (loading) {
+    loading.textContent = 'Preview unavailable';
+  }
 }
 
-function contribSelectHand(which, hand) {
-  const side = hand === 'left' ? 'L' : 'R';
-  const other = hand === 'left' ? 'R' : 'L';
-  document.getElementById(`chl-${which}-${side}`).classList.add('sel');
-  document.getElementById(`chl-${which}-${other}`).classList.remove('sel');
-  if (which === 'start') _contribStartSel = hand;
-  else                   _contribEndSel   = hand;
+/* ─── Discard & Try Again ─── */
+
+function contribDiscard() {
+  // Tell server to delete preview file and drop session
+  if (contribSessionId) {
+    fetch(`${SERVER}/contributor/discard`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: contribSessionId }),
+    }).catch(() => {});
+  }
+
+  // Clean up playback
+  const playback = document.getElementById('contrib-playback');
+  if (playback) { playback.pause(); playback.src = ''; playback.style.display = 'none'; }
+  const loading = document.getElementById('contrib-review-loading');
+  if (loading) { loading.style.display = 'flex'; loading.textContent = 'Processing video\u2026'; }
+
+  // Fresh session ID so the next attempt doesn't collide with the discarded one
+  contribSessionId = _contribUUID();
+
+  // Return to contrib view idle
+  document.getElementById('view-contrib-review').classList.remove('active');
+  document.getElementById('view-contrib').classList.add('active');
+  const btn = document.getElementById('contrib-start-btn');
+  if (btn) { btn.textContent = 'Start Contributing'; btn.disabled = false; }
+  contribShowPhase('idle');
+  setBadge('contrib-badge', '', 'idle');
 }
+
+/* ─── Labeling (on view-contrib-review) ─── */
 
 async function contribSubmitLabel() {
-  if (!_contribStartSel || !_contribEndSel) {
+  const startHand = document.getElementById('sel-start-hand').value;
+  const endHand   = document.getElementById('sel-end-hand').value;
+
+  if (!startHand || !endHand) {
     document.getElementById('contrib-label-err').classList.add('show');
     return;
   }
@@ -252,16 +254,26 @@ async function contribSubmitLabel() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         session_id: contribSessionId,
-        start_hand: _contribStartSel,
-        end_hand:   _contribEndSel,
+        start_hand: startHand,
+        end_hand:   endHand,
       }),
     });
     const data = await res.json();
+
+    // Clean up playback
+    const playback = document.getElementById('contrib-playback');
+    if (playback) { playback.pause(); playback.src = ''; playback.style.display = 'none'; }
+    const loading = document.getElementById('contrib-review-loading');
+    if (loading) { loading.style.display = 'flex'; loading.textContent = 'Processing video\u2026'; }
+
+    // Go to done phase on view-contrib
+    document.getElementById('view-contrib-review').classList.remove('active');
+    document.getElementById('view-contrib').classList.add('active');
     document.getElementById('contrib-done-vid').textContent = `Video ID: ${data.video_id}`;
     contribShowPhase('done');
     setBadge('contrib-badge', 'ok', 'submitted');
   } catch(e) {
-    setBadge('contrib-badge', 'err', 'save failed');
+    setBadge('contrib-review-badge', 'err', 'save failed');
     document.getElementById('contrib-submit-btn').disabled = false;
   }
 }
@@ -271,7 +283,6 @@ async function contribSubmitLabel() {
 async function contribSendFrame() {
   if (!contribRecording) { clearInterval(contribInterval); return; }
 
-  // Build keypoints array from latest MP result (corrected for MP mirror flip)
   const kp   = [Array(21).fill(null).map(() => [0, 0, 0]),
                  Array(21).fill(null).map(() => [0, 0, 0])];
   const mask = [false, false];
@@ -284,7 +295,6 @@ async function contribSendFrame() {
     });
   }
 
-  // Store client-side for skeleton replay
   contribKpHistory.push(kp.map(h => h.map(lm => [...lm])));
   contribMaskHistory.push([...mask]);
 
@@ -324,7 +334,7 @@ function onContribMP(res) {
   document.getElementById('contrib-nhtag').classList.toggle('show', contribRecording && !detected);
 }
 
-/* ─── Stop / cleanup ─── */
+/* ─── Stop / cleanup (recording phase only) ─── */
 
 function contribStop() {
   _contribStartId++;
@@ -349,12 +359,10 @@ function contribStop() {
   if (btn) { btn.textContent = 'Start Contributing'; btn.disabled = false; }
   contribShowPhase('idle');
   setBadge('contrib-badge', '', 'idle');
-  _contribReplayId++;
 }
 
 function contribPlayAgain() {
   contribStop();
-  // Consent already given — generate a fresh session ID and start directly
   contribSessionId = _contribUUID();
   _contribBeginSession();
 }

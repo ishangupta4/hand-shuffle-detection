@@ -313,46 +313,6 @@
         </div>
       </div>
 
-      <!-- Phase: review -->
-      <div class="contrib-phase" id="contrib-p-review" style="display:none">
-        <div class="contrib-review-inner">
-          <div class="contrib-review-title">Preview Recording</div>
-          <div class="contrib-skeleton-wrap">
-            <canvas id="contrib-skeleton-canvas" class="contrib-skeleton-canvas"></canvas>
-            <button class="contrib-replay-btn" onclick="contribReplay()">Replay</button>
-          </div>
-        </div>
-        <div class="ctrl-row">
-          <button class="btn prim-contrib" onclick="contribGoToLabel()">Next: Label Session →</button>
-        </div>
-      </div>
-
-      <!-- Phase: labeling -->
-      <div class="contrib-phase" id="contrib-p-label" style="display:none">
-        <div class="contrib-label-inner">
-          <div class="rlabel">Label Your Session</div>
-          <div class="contrib-label-q">
-            <p class="contrib-label-q-text">Which hand held the object at the <strong>start</strong>?</p>
-            <div class="hand-select-row">
-              <button class="hand-btn L" id="chl-start-L" onclick="contribSelectHand('start','left')">Left</button>
-              <button class="hand-btn R" id="chl-start-R" onclick="contribSelectHand('start','right')">Right</button>
-            </div>
-          </div>
-          <div class="contrib-label-q">
-            <p class="contrib-label-q-text">Which hand held the object at the <strong>end</strong>?</p>
-            <div class="hand-select-row">
-              <button class="hand-btn L" id="chl-end-L" onclick="contribSelectHand('end','left')">Left</button>
-              <button class="hand-btn R" id="chl-end-R" onclick="contribSelectHand('end','right')">Right</button>
-            </div>
-          </div>
-          <span class="contrib-label-err" id="contrib-label-err">Select both hands before submitting</span>
-        </div>
-        <div class="ctrl-row">
-          <button class="btn" onclick="contribGoToLabel()">← Review Again</button>
-          <button class="btn prim-contrib" id="contrib-submit-btn" onclick="contribSubmitLabel()">Submit</button>
-        </div>
-      </div>
-
       <!-- Phase: done -->
       <div class="contrib-phase" id="contrib-p-done" style="display:none">
         <div class="contrib-done-inner">
@@ -403,6 +363,58 @@
   </div>
 
 </div><!-- /view-contrib -->
+
+<!-- ═══ CONTRIBUTOR REVIEW VIEW ═══ -->
+<div class="view" id="view-contrib-review">
+  <header class="hdr">
+    <div class="hdr-left">
+      <span class="logo">HandShuffle<span>.ai</span> <span style="color:var(--ok);font-size:11px">/ review</span></span>
+      <span class="sys-badge contrib" id="contrib-review-badge">review</span>
+    </div>
+    <div class="hdr-right">
+      <button class="hdr-btn danger" onclick="contribDiscard()">Discard</button>
+    </div>
+  </header>
+  <div class="body">
+
+    <!-- Masked video playback -->
+    <div class="cam-panel" style="position:relative;background:#000">
+      <div class="contrib-review-loading" id="contrib-review-loading">Processing video&hellip;</div>
+      <video id="contrib-playback" muted playsinline loop controls
+             style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none"></video>
+    </div>
+
+    <!-- Label panel -->
+    <div class="contrib-rpanel">
+      <div class="contrib-label-inner">
+        <div class="rlabel">Label Your Session</div>
+        <p class="contrib-label-q-text">Watch the recording above, then label where the object was.</p>
+        <div class="contrib-label-q">
+          <p class="contrib-label-q-text">Which hand held the object at the <strong>start</strong>?</p>
+          <select class="contrib-select" id="sel-start-hand">
+            <option value="">— select —</option>
+            <option value="left">Left hand</option>
+            <option value="right">Right hand</option>
+          </select>
+        </div>
+        <div class="contrib-label-q">
+          <p class="contrib-label-q-text">Which hand held the object at the <strong>end</strong>?</p>
+          <select class="contrib-select" id="sel-end-hand">
+            <option value="">— select —</option>
+            <option value="left">Left hand</option>
+            <option value="right">Right hand</option>
+          </select>
+        </div>
+        <span class="contrib-label-err" id="contrib-label-err">Select both hands before submitting.</span>
+      </div>
+      <div class="ctrl-row">
+        <button class="btn" onclick="contribDiscard()">Discard &amp; Try Again</button>
+        <button class="btn prim-contrib" id="contrib-submit-btn" onclick="contribSubmitLabel()">Submit &rarr;</button>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /view-contrib-review -->
 
 <script src="js/config.js"></script>
 <script src="js/state.js"></script>

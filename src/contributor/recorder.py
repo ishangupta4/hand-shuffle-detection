@@ -4,6 +4,12 @@ import cv2
 import numpy as np
 
 
+# Codecs tried in order for browser-compatible video output.
+# avc1 = H.264 (best for browsers, uses AVFoundation on macOS).
+# mp4v = MPEG-4 Part 2 (fallback — works but some browsers reject it).
+_PREVIEW_CODECS = ['avc1', 'H264', 'mp4v']
+
+
 class Recorder:
     def __init__(self, cfg):
         self.cfg = cfg
@@ -30,10 +36,13 @@ class Recorder:
             return None
 
         w, h = self.cfg.recording.resolution
-        fourcc = cv2.VideoWriter_fourcc(*self.cfg.recording.codec)
         actual_fps = session.frame_count / max(self.cfg.recording.duration_seconds, 1)
         actual_fps = max(1.0, actual_fps)
-        writer = cv2.VideoWriter(str(output_path), fourcc, actual_fps, (w, h))
+
+        writer = self._open_writer(output_path, actual_fps, w, h)
+        if writer is None:
+            print(f"  VideoWriter: all codecs failed for {output_path}")
+            return None
 
         for i, frame_rgb in enumerate(session.frames):
             kp = session.keypoints[i] if i < len(session.keypoints) else np.zeros((2, 21, 3), dtype=np.float32)
@@ -45,3 +54,17 @@ class Recorder:
 
         writer.release()
         return output_path
+
+    def _open_writer(self, output_path, fps, w, h):
+        """Try codecs in order; return the first VideoWriter that opens."""
+        for codec in _PREVIEW_CODECS:
+            try:
+                fourcc = cv2.VideoWriter_fourcc(*codec)
+                writer = cv2.VideoWriter(str(output_path), fourcc, fps, (w, h))
+                if writer.isOpened():
+                    print(f"  VideoWriter: using codec '{codec}'")
+                    return writer
+                writer.release()
+            except Exception as e:
+                print(f"  VideoWriter: codec '{codec}' failed: {e}")
+        return None
