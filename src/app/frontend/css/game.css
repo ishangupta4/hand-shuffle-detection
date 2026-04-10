@@ -18,7 +18,7 @@
 }
 .ring-num{
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  font-family:var(--font-mono);font-size:32px;font-weight:500;
+  font-family:var(--font-display);font-style:italic;font-size:32px;font-weight:400;
   color:var(--game);transition:color .5s;
 }
 
@@ -38,8 +38,8 @@
   from{opacity:0;transform:scale(.92) translateY(8px)}
   to{opacity:1;transform:scale(1) translateY(0)}
 }
-.result-card.L{border-color:var(--left-border);background:var(--left-bg)}
-.result-card.R{border-color:var(--right-border);background:var(--right-bg)}
+.result-card.L{border-color:var(--left-border);background:var(--left-light)}
+.result-card.R{border-color:var(--right-border);background:var(--right-light)}
 
 .res-label{
   font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;
