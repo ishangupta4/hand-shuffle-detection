@@ -1,16 +1,138 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#070b13;--bg1:#0c1220;--bg2:#12182c;--bg3:#1a2038;
-  --line:#1e2840;--line2:#2b3858;
-  --txt:#dce4f5;--txt2:#7d90b8;--txt3:#475272;
-  --acc:#22d3ee;--acc-dim:#052230;
-  --left:#38bdf8;--left-bg:#061d34;
-  --right:#fb923c;--right-bg:#241108;
-  --warn:#fbbf24;--ok:#34d399;--ok-bg:#051f16;
-  --game:#a78bfa;--game-bg:#130c2e;
-  --mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;--r:6px;
-}
-html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased}
 
+/* ─── Light theme (default) ─── */
+:root{
+  /* Surfaces */
+  --bg:#f7f6f3;
+  --bg-surface:#ffffff;
+  --bg-raised:#f0ede8;
+  --bg-sunken:#e8e4de;
+
+  /* Borders */
+  --border:#d4cfc8;
+  --border-strong:#a8a39b;
+
+  /* Text */
+  --text:#1c1917;
+  --text-mid:#57534e;
+  --text-dim:#a8a29e;
+
+  /* Hand colors */
+  --left:#1d5fa8;
+  --left-bg:#dbeafe;
+  --left-border:#93c5fd;
+  --right:#b54309;
+  --right-bg:#fed7aa;
+  --right-border:#fb923c;
+
+  /* Mode colors */
+  --game:#5b21b6;
+  --game-bg:#ede9fe;
+  --game-border:#c4b5fd;
+  --ok:#166534;
+  --ok-bg:#dcfce7;
+  --warn:#92400e;
+  --warn-bg:#fef3c7;
+  --err:#991b1b;
+  --err-bg:#fee2e2;
+  --contributor:#065f46;
+  --contributor-bg:#d1fae5;
+
+  /* Shadows */
+  --shadow-sm:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg:0 16px 40px rgba(0,0,0,.10),0 4px 12px rgba(0,0,0,.06);
+
+  /* Typography */
+  --font-display:'Instrument Serif',Georgia,serif;
+  --font-mono:'DM Mono','Courier New',monospace;
+  --font-body:'DM Sans',system-ui,sans-serif;
+
+  /* Shape */
+  --radius-sm:4px;
+  --radius-md:8px;
+  --radius-lg:12px;
+  --radius-xl:16px;
+  --radius-pill:999px;
+
+  /* Legacy aliases (JS-targeted class names reference these) */
+  --bg1:#ffffff;
+  --bg2:#f0ede8;
+  --bg3:#e8e4de;
+  --line:#d4cfc8;
+  --line2:#a8a39b;
+  --txt:#1c1917;
+  --txt2:#57534e;
+  --txt3:#a8a29e;
+  --acc:#1d5fa8;
+  --acc-dim:#dbeafe;
+  --mono:'DM Mono',monospace;
+  --sans:'DM Sans',sans-serif;
+  --r:var(--radius-md);
+}
+
+/* ─── Dark theme ─── */
+[data-theme="dark"]{
+  --bg:#0d0f14;
+  --bg-surface:#13161e;
+  --bg-raised:#1a1e28;
+  --bg-sunken:#222636;
+  --border:#2a2e3e;
+  --border-strong:#363b52;
+  --text:#e2e4ed;
+  --text-mid:#8b8fa8;
+  --text-dim:#555975;
+  --left:#4f9cf9;
+  --left-bg:#0e2040;
+  --left-border:#1e3a5f;
+  --right:#f97b4f;
+  --right-bg:#3d1a0a;
+  --right-border:#5a2a10;
+  --game:#a78bfa;
+  --game-bg:#1e1540;
+  --game-border:#2d1f60;
+  --ok:#4fcf8a;
+  --ok-bg:#0a2d1c;
+  --warn:#f9c74f;
+  --warn-bg:#3d2e0a;
+  --err:#f87171;
+  --err-bg:#3d0a0a;
+  --contributor:#34d399;
+  --contributor-bg:#064e3b;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.4);
+  --shadow-md:0 4px 12px rgba(0,0,0,.4);
+  --shadow-lg:0 16px 40px rgba(0,0,0,.5);
+  --bg1:#13161e;
+  --bg2:#1a1e28;
+  --bg3:#222636;
+  --line:#2a2e3e;
+  --line2:#363b52;
+  --txt:#e2e4ed;
+  --txt2:#8b8fa8;
+  --txt3:#555975;
+  --acc:#4f9cf9;
+  --acc-dim:#0e2040;
+}
+
+/* ─── Base ─── */
+html,body{
+  height:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+  transition:background-color .2s ease,color .2s ease;
+}
+
+/* ─── View system ─── */
 .view{position:absolute;inset:0;display:none;flex-direction:column}
 .view.active{display:flex}
+
+/* ─── Focus ─── */
+:focus-visible{outline:2px solid var(--left);outline-offset:2px}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
