@@ -16,9 +16,11 @@ always gets a full temporal sequence to work with.
 import argparse
 import base64
 import collections
+import csv
 import json
 import os
 import sys
+import threading
 from pathlib import Path
 
 import cv2
@@ -161,6 +163,50 @@ state = InferenceState()
 
 
 # ---------------------------------------------------------------------------
+# Contributor state
+# ---------------------------------------------------------------------------
+
+class ContributorState:
+    def __init__(self):
+        self.sessions = {}
+        self._lock = threading.Lock()
+        self._next_video_id = None
+        self.cfg = None
+        self.pipeline = None
+
+    def init(self):
+        from src.contributor.config import load_config
+        from src.contributor.pipeline import Pipeline
+        self.cfg = load_config()
+        self.pipeline = Pipeline(self.cfg)
+        self._next_video_id = self._compute_next_id()
+        print(f"  Contributor mode: {self.cfg.collection_mode}, "
+              f"storage: {self.cfg.storage.backend}, "
+              f"next video id: {self._next_video_id:05d}")
+
+    def _compute_next_id(self):
+        csv_path = (PROJECT_ROOT / self.cfg.storage.local_dir
+                    / "labels" / "contributions.csv")
+        if not csv_path.exists():
+            return self.cfg.video_ids.start_index
+        try:
+            with open(csv_path) as f:
+                reader = csv.DictReader(f)
+                ids = [int(row["video_id"]) for row in reader]
+            return max(ids) + 1 if ids else self.cfg.video_ids.start_index
+        except Exception:
+            return self.cfg.video_ids.start_index
+
+    def next_video_id(self):
+        with self._lock:
+            vid_id = self._next_video_id
+            self._next_video_id += 1
+            return f"{vid_id:05d}"
+
+contrib_state = ContributorState()
+
+
+# ---------------------------------------------------------------------------
 # FastAPI app
 # ---------------------------------------------------------------------------
 
@@ -282,6 +328,148 @@ def _predict_sync(req: FrameRequest) -> PredictionResponse:
 
 
 # ---------------------------------------------------------------------------
+# Contributor models + endpoints
+# ---------------------------------------------------------------------------
+
+class ConsentRequest(BaseModel):
+    session_id: str
+    user_agent: str
+    collection_mode: str
+    storage_backend: str
+
+
+class ContributorStartRequest(BaseModel):
+    session_id: str
+    consent_id: str
+    collection_mode: str = ""
+
+
+class ContributorFrameRequest(BaseModel):
+    session_id: str
+    frame: str = ""          # base64 JPEG, optional
+    keypoints: list          # [[21,3],[21,3]] — one entry per hand (left=0, right=1)
+    mask: list               # [bool, bool]
+    frame_index: int = 0
+
+
+class ContributorStopRequest(BaseModel):
+    session_id: str
+
+
+class ContributorLabelRequest(BaseModel):
+    session_id: str
+    start_hand: str          # "left" | "right"
+    end_hand: str            # "left" | "right"
+
+
+@app.post("/contributor/consent")
+async def contributor_consent(req: ConsentRequest):
+    if contrib_state.pipeline is None:
+        return {"consent_id": "unavailable"}
+    from src.contributor.consent import create_consent_id, make_consent_record
+    consent_id = create_consent_id()
+    record = make_consent_record(
+        req.session_id, consent_id, req.user_agent,
+        req.collection_mode, req.storage_backend,
+    )
+    contrib_state.pipeline.storage.save_consent(consent_id, record)
+    return {"consent_id": consent_id}
+
+
+@app.post("/contributor/start")
+async def contributor_start(req: ContributorStartRequest):
+    if contrib_state.pipeline is None:
+        return {"session_id": req.session_id, "video_id": "unavailable"}
+    from src.contributor.session import ContributorSession
+    video_id = contrib_state.next_video_id()
+    mode = req.collection_mode or contrib_state.cfg.collection_mode
+    session = ContributorSession(
+        session_id=req.session_id,
+        video_id=video_id,
+        consent_id=req.consent_id,
+        collection_mode=mode,
+        recording=True,
+    )
+    contrib_state.sessions[req.session_id] = session
+    return {"session_id": req.session_id, "video_id": video_id}
+
+
+@app.post("/contributor/frame")
+async def contributor_frame(req: ContributorFrameRequest):
+    from starlette.concurrency import run_in_threadpool
+    return await run_in_threadpool(_contrib_frame_sync, req)
+
+
+def _contrib_frame_sync(req: ContributorFrameRequest):
+    session = contrib_state.sessions.get(req.session_id)
+    if not session or not session.recording:
+        return {"ok": False, "frame_count": 0}
+
+    kp = np.array(req.keypoints, dtype=np.float32)   # (2, 21, 3)
+    mk = np.array(req.mask, dtype=bool)               # (2,)
+
+    frame_rgb = None
+    if req.frame:
+        try:
+            img_bytes = base64.b64decode(req.frame)
+            img_array = np.frombuffer(img_bytes, dtype=np.uint8)
+            frame_bgr = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+            frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+        except Exception:
+            pass
+
+    contrib_state.pipeline.add_frame(session, frame_rgb, kp, mk)
+    return {"ok": True, "frame_count": session.frame_count}
+
+
+@app.post("/contributor/stop")
+async def contributor_stop(req: ContributorStopRequest):
+    session = contrib_state.sessions.get(req.session_id)
+    if not session:
+        return {"frame_count": 0, "duration_seconds": 0, "preview_available": False}
+    session.recording = False
+    fps = contrib_state.cfg.recording.fps if contrib_state.cfg else 15
+    duration = round(session.frame_count / max(fps, 1), 1)
+    return {
+        "frame_count": session.frame_count,
+        "duration_seconds": duration,
+        "preview_available": len(session.keypoints) > 0,
+    }
+
+
+@app.get("/contributor/preview/{session_id}")
+async def contributor_preview(session_id: str):
+    session = contrib_state.sessions.get(session_id)
+    if not session or not session.keypoints:
+        return {"preview_type": "none", "fps": 15, "data": None}
+    fps = contrib_state.cfg.recording.fps if contrib_state.cfg else 15
+    max_frames = fps * 3
+    kp_data = [kp.tolist() for kp in session.keypoints[:max_frames]]
+    mask_data = [mk.tolist() for mk in session.masks[:max_frames]]
+    return {
+        "preview_type": "skeleton",
+        "fps": fps,
+        "data": {"keypoints": kp_data, "masks": mask_data},
+    }
+
+
+@app.post("/contributor/label")
+async def contributor_label(req: ContributorLabelRequest):
+    session = contrib_state.sessions.get(req.session_id)
+    if not session:
+        return {"success": False, "video_id": None, "storage_backend": None}
+    if req.start_hand not in ("left", "right") or req.end_hand not in ("left", "right"):
+        return {"success": False, "video_id": None, "storage_backend": None}
+    contrib_state.pipeline.save_session_async(session, req.start_hand, req.end_hand)
+    session.finalized = True
+    return {
+        "success": True,
+        "video_id": session.video_id,
+        "storage_backend": contrib_state.cfg.storage.backend,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
@@ -313,6 +501,12 @@ def main():
     # Ensure MediaPipe model
     state.mp_model_path = ensure_model(args.mp_model)
     print(f"  MediaPipe model: {state.mp_model_path}")
+
+    # Initialize contributor state
+    try:
+        contrib_state.init()
+    except Exception as e:
+        print(f"  Contributor mode disabled: {e}")
 
     print(f"\nServer running at http://{args.host}:{args.port}")
     uvicorn.run(app, host=args.host, port=args.port, log_level="warning")
