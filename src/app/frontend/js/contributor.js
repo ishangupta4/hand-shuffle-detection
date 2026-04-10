@@ -14,6 +14,10 @@ function contribShowPhase(phase) {
 /* ─── Entry: user clicks "Start Contributing" ─── */
 
 function contribOpenConsent() {
+  if (contribHasConsented) {
+    _contribBeginSession();
+    return;
+  }
   document.getElementById('contrib-modal').classList.add('show');
 }
 
@@ -23,6 +27,7 @@ function contribConsentDecline() {
 
 async function contribConsentAccept() {
   document.getElementById('contrib-modal').classList.remove('show');
+  contribHasConsented = true;
   contribSessionId = _contribUUID();
 
   try {
@@ -35,21 +40,35 @@ async function contribConsentAccept() {
         storage_backend: 'local',
       }),
     });
+    if (!res.ok) throw new Error(`consent failed: ${res.status}`);
     const data = await res.json();
     contribConsentId = data.consent_id;
   } catch(e) {
     setBadge('contrib-badge', 'err', 'no server');
+    contribHasConsented = false;
     return;
   }
 
-  await _contribBeginSession();
+  _contribBeginSession();
 }
 
 /* ─── Session lifecycle ─── */
 
+const CONTRIB_CIRC = 263.9;  // 2π × 42 (contrib ring radius)
+
 async function _contribBeginSession() {
   const myId = ++_contribStartId;
   document.getElementById('contrib-start-btn').disabled = true;
+
+  // Switch to rec phase immediately so the user sees something is happening
+  contribShowPhase('rec');
+  document.getElementById('contrib-stop-hdr').style.display = '';
+  setBadge('contrib-badge', '', 'starting\u2026');
+  document.getElementById('contrib-rec-status').textContent = 'starting camera\u2026';
+  document.getElementById('contrib-ring-num').textContent = GAME_SECS;
+  document.getElementById('contrib-ring-track').style.strokeDashoffset = '0';
+  document.getElementById('contrib-ring-track').style.stroke = 'var(--ok)';
+  document.getElementById('contrib-ring-num').style.color = 'var(--ok)';
 
   try {
     if (!streamC) {
@@ -74,17 +93,12 @@ async function _contribBeginSession() {
         collection_mode: 'both',
       }),
     });
+    if (!startRes.ok) throw new Error(`start failed: ${startRes.status}`);
     const startData = await startRes.json();
     contribVideoId = startData.video_id;
 
-    contribShowPhase('rec');
-    document.getElementById('contrib-stop-hdr').style.display = '';
-    setBadge('contrib-badge', '', 'get ready');
     document.getElementById('contrib-rec-status').textContent = 'get ready to shuffle';
-    document.getElementById('contrib-ring-num').textContent = GAME_SECS;
-    document.getElementById('contrib-ring-track').style.strokeDashoffset = '0';
-    document.getElementById('contrib-ring-track').style.stroke = 'var(--ok)';
-    document.getElementById('contrib-ring-num').style.color = 'var(--ok)';
+    setBadge('contrib-badge', '', 'get ready');
 
     await countdown('contrib-cd', 'contrib-cd-n', 3);
     if (_contribStartId !== myId) return;
@@ -93,9 +107,11 @@ async function _contribBeginSession() {
 
   } catch(e) {
     if (_contribStartId !== myId) return;
-    setBadge('contrib-badge', 'err', 'no camera');
+    contribShowPhase('idle');
+    document.getElementById('contrib-stop-hdr').style.display = 'none';
+    setBadge('contrib-badge', 'err', 'camera error');
     document.getElementById('contrib-start-btn').disabled = false;
-    console.error(e);
+    console.error('Contributor session error:', e);
   }
 }
 
@@ -115,7 +131,7 @@ function _contribBeginRecording(myId) {
     const rem  = GAME_SECS - contribElapsed;
     const prog = contribElapsed / GAME_SECS;
     document.getElementById('contrib-ring-num').textContent = rem > 0 ? rem : '0';
-    document.getElementById('contrib-ring-track').style.strokeDashoffset = CIRC * prog;
+    document.getElementById('contrib-ring-track').style.strokeDashoffset = CONTRIB_CIRC * prog;
     document.getElementById('contrib-prog').style.width = (prog * 100) + '%';
     document.getElementById('contrib-rec-status').textContent =
       rem > 0 ? `recording \u2014 ${rem}s remaining` : 'processing\u2026';
@@ -338,8 +354,9 @@ function contribStop() {
 
 function contribPlayAgain() {
   contribStop();
-  // Immediately re-open consent for a new session
-  contribOpenConsent();
+  // Consent already given — generate a fresh session ID and start directly
+  contribSessionId = _contribUUID();
+  _contribBeginSession();
 }
 
 /* ─── Helpers ─── */

@@ -21,4 +21,5 @@ let contribHandsIn = false, contribHandCount = 0;
 let contribLatestMP = null;
 let contribSessionId = null, contribConsentId = null, contribVideoId = null;
 let contribKpHistory = [], contribMaskHistory = [];
+let contribHasConsented = false;  // consent once per page session
 let _contribStartId = 0;  // incremented on contribStop() to cancel in-flight async starts

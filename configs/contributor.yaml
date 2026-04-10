@@ -23,5 +23,3 @@ contributor:
       access_key_env: AWS_ACCESS_KEY_ID
       secret_key_env: AWS_SECRET_ACCESS_KEY
 
-  video_ids:
-    start_index: 20                      # contributed videos start at 000020

@@ -16,7 +16,6 @@ always gets a full temporal sequence to work with.
 import argparse
 import base64
 import collections
-import csv
 import json
 import os
 import sys
@@ -170,7 +169,6 @@ class ContributorState:
     def __init__(self):
         self.sessions = {}
         self._lock = threading.Lock()
-        self._next_video_id = None
         self.cfg = None
         self.pipeline = None
 
@@ -179,29 +177,14 @@ class ContributorState:
         from src.contributor.pipeline import Pipeline
         self.cfg = load_config()
         self.pipeline = Pipeline(self.cfg)
-        self._next_video_id = self._compute_next_id()
         print(f"  Contributor mode: {self.cfg.collection_mode}, "
-              f"storage: {self.cfg.storage.backend}, "
-              f"next video id: {self._next_video_id:05d}")
+              f"storage: {self.cfg.storage.backend}")
 
-    def _compute_next_id(self):
-        csv_path = (PROJECT_ROOT / self.cfg.storage.local_dir
-                    / "labels" / "contributions.csv")
-        if not csv_path.exists():
-            return self.cfg.video_ids.start_index
-        try:
-            with open(csv_path) as f:
-                reader = csv.DictReader(f)
-                ids = [int(row["video_id"]) for row in reader]
-            return max(ids) + 1 if ids else self.cfg.video_ids.start_index
-        except Exception:
-            return self.cfg.video_ids.start_index
-
-    def next_video_id(self):
-        with self._lock:
-            vid_id = self._next_video_id
-            self._next_video_id += 1
-            return f"{vid_id:05d}"
+    def next_video_id(self, session_id=""):
+        import datetime
+        ts = datetime.datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        prefix = (session_id or "").replace("-", "")[:8] or "00000000"
+        return f"{ts}_{prefix}"
 
 contrib_state = ContributorState()
 
@@ -381,7 +364,7 @@ async def contributor_start(req: ContributorStartRequest):
     if contrib_state.pipeline is None:
         return {"session_id": req.session_id, "video_id": "unavailable"}
     from src.contributor.session import ContributorSession
-    video_id = contrib_state.next_video_id()
+    video_id = contrib_state.next_video_id(req.session_id)
     mode = req.collection_mode or contrib_state.cfg.collection_mode
     session = ContributorSession(
         session_id=req.session_id,
