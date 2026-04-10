@@ -1,3 +1,32 @@
+/* ─── THEME ─── */
+
+function initTheme() {
+  const saved = localStorage.getItem('hsa-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const dark = saved ? saved === 'dark' : prefersDark;
+  if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+  _applyThemeIcons(dark);
+}
+
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (isDark) {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('hsa-theme', 'light');
+    _applyThemeIcons(false);
+  } else {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    localStorage.setItem('hsa-theme', 'dark');
+    _applyThemeIcons(true);
+  }
+}
+
+function _applyThemeIcons(dark) {
+  document.querySelectorAll('.theme-toggle').forEach(btn => {
+    btn.textContent = dark ? '◑' : '☀';
+  });
+}
+
 /* ─── NAVIGATION ─── */
 
 function switchFromSplashToGame() {
@@ -54,6 +83,7 @@ function switchToContrib() {
 
 /* ─── HEALTH CHECK ─── */
 window.addEventListener('load', async () => {
+  initTheme();
   try {
     const d = await (await fetch(`${SERVER}/health`)).json();
     const ok = d.model_loaded;
