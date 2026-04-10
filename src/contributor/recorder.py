@@ -31,7 +31,9 @@ class Recorder:
 
         w, h = self.cfg.recording.resolution
         fourcc = cv2.VideoWriter_fourcc(*self.cfg.recording.codec)
-        writer = cv2.VideoWriter(str(output_path), fourcc, self.cfg.recording.fps, (w, h))
+        actual_fps = session.frame_count / max(self.cfg.recording.duration_seconds, 1)
+        actual_fps = max(1.0, actual_fps)
+        writer = cv2.VideoWriter(str(output_path), fourcc, actual_fps, (w, h))
 
         for i, frame_rgb in enumerate(session.frames):
             kp = session.keypoints[i] if i < len(session.keypoints) else np.zeros((2, 21, 3), dtype=np.float32)
