@@ -204,19 +204,10 @@ function startBgSkeleton() {
   _skelRaf = requestAnimationFrame(frame);
 }
 
-/* ─── SPLASH CARD ANIMATION ─── */
-
-function animateSplashCards() {
-  document.querySelectorAll('.splash-card').forEach((card, i) => {
-    setTimeout(() => card.classList.add('card-visible'), i * 130 + 60);
-  });
-}
-
 /* ─── HEALTH CHECK ─── */
 window.addEventListener('load', async () => {
   initTheme();
   startBgSkeleton();
-  animateSplashCards();
 
   try {
     const d = await (await fetch(`${SERVER}/health`)).json();
