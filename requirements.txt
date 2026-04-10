@@ -14,3 +14,6 @@ jupyter
 fastapi
 uvicorn
 python-multipart
+# Optional: only needed for non-local contributor storage backends
+# huggingface_hub>=0.20.0
+# boto3>=1.34.0

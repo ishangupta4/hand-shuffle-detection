@@ -52,6 +52,10 @@ Thumbs.db
 # Misc
 src.zip
 
+# Contributor data — real user data, never committed
+user-data/
+user-data-tmp/
+
 #claude
 CLAUDE.md
 .claude/

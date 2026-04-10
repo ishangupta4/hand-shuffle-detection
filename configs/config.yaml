@@ -14,6 +14,8 @@ mediapipe:
   min_detection_confidence: 0.5
   min_tracking_confidence: 0.5
 
+contributor_config: configs/contributor.yaml
+
 video_quality:
   min_resolution: [480, 360]
   good_resolution: [1280, 720]
