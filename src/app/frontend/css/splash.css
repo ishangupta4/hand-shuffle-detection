@@ -1,10 +1,18 @@
 /* ═══ SPLASH VIEW ═══ */
 
+/* ─── Background skeleton canvas ─── */
+#bg-skeleton{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ─── Splash wrap ─── */
 .splash-wrap{
+  position:relative;z-index:1;
   display:flex;flex-direction:column;height:100%;
   background:var(--bg);
-  background-image:radial-gradient(ellipse 80% 60% at 50% 40%,var(--bg-surface) 0%,var(--bg) 100%);
-  transition:background-color .2s ease;
 }
 
 /* ── Splash header ── */
@@ -24,147 +32,137 @@
 
 .splash-main{
   display:flex;flex-direction:column;align-items:center;
-  gap:0;max-width:680px;width:100%;
+  gap:0;max-width:700px;width:100%;
 }
 
 /* ── Institution label ── */
 .splash-institution{
-  font-family:var(--font-mono);font-size:9px;font-weight:500;
-  letter-spacing:.2em;text-transform:uppercase;
+  font-family:var(--font-mono);font-size:9px;font-weight:400;
+  letter-spacing:.22em;text-transform:uppercase;
   color:var(--text-dim);text-align:center;line-height:1.8;
-  margin-bottom:24px;
+  margin-bottom:20px;
 }
 
 /* ── Headline ── */
 .splash-headline{
   font-family:var(--font-display);font-style:italic;
-  font-size:clamp(2.5rem,5vw,4rem);
-  color:var(--text);text-align:center;line-height:1.05;
+  font-size:clamp(2.8rem,5.5vw,4.5rem);
+  color:var(--text);text-align:center;line-height:1.02;
   letter-spacing:-.01em;
-  margin-bottom:16px;
+  margin-bottom:14px;
 }
 
 /* ── Tagline ── */
 .splash-tagline{
-  font-family:var(--font-body);font-size:1.05rem;
-  color:var(--text-mid);font-style:italic;font-weight:300;
-  text-align:center;margin-bottom:12px;
+  font-family:var(--font-body);font-size:1.05rem;font-weight:300;
+  color:var(--text-mid);text-align:center;
+  margin-bottom:10px;
 }
 
 /* ── Subtext ── */
 .splash-sub{
   font-family:var(--font-body);font-size:13px;font-weight:300;
   color:var(--text-dim);text-align:center;
-  max-width:480px;line-height:1.7;margin-bottom:48px;
+  max-width:460px;line-height:1.75;margin-bottom:48px;
 }
 
 /* ── Mode cards ── */
 .splash-cards{
-  display:flex;gap:16px;width:100%;max-width:640px;
-  margin-bottom:48px;
+  display:flex;gap:14px;width:100%;max-width:660px;
+  margin-bottom:40px;
 }
 
+/* Cards start hidden; JS adds .card-visible with staggered delays */
 .splash-card{
-  flex:1;padding:24px 20px;border-radius:var(--radius-lg);
+  flex:1;padding:22px 18px 20px;border-radius:var(--radius-lg);
   border:1px solid var(--border);background:var(--bg-surface);
   cursor:pointer;
-  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
   display:flex;flex-direction:column;gap:10px;
   position:relative;overflow:hidden;
   box-shadow:var(--shadow-sm);
+  opacity:0;transform:translateY(24px);
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
 }
+.splash-card.card-visible{
+  opacity:1;transform:none;
+  transition:opacity .55s ease,transform .55s cubic-bezier(.34,1.1,.64,1),
+             box-shadow .2s ease,border-color .2s ease;
+}
+
+/* Colored left border accent */
 .splash-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  opacity:0;transition:opacity .25s;
+  content:'';position:absolute;top:0;left:0;bottom:0;width:3px;
+  border-radius:3px 0 0 3px;opacity:0;transition:opacity .2s;
 }
-.splash-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
 .splash-card:hover::before{opacity:1}
+.splash-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
 
 /* Live card */
-.card-live{border-color:color-mix(in srgb,var(--left) 20%,var(--border))}
-.card-live::before{background:linear-gradient(90deg,transparent 10%,var(--left) 50%,transparent 90%)}
+.card-live{border-color:color-mix(in srgb,var(--left) 25%,var(--border))}
+.card-live::before{background:var(--left)}
 .card-live:hover{border-color:var(--left-border)}
 
 /* Game card */
-.card-game{border-color:color-mix(in srgb,var(--game) 20%,var(--border))}
-.card-game::before{background:linear-gradient(90deg,transparent 10%,var(--game) 50%,transparent 90%)}
+.card-game{border-color:color-mix(in srgb,var(--game) 25%,var(--border))}
+.card-game::before{background:var(--game)}
 .card-game:hover{border-color:var(--game-border)}
 
 /* Contrib card */
-.card-contrib{border-color:color-mix(in srgb,var(--contributor) 20%,var(--border))}
-.card-contrib::before{background:linear-gradient(90deg,transparent 10%,var(--contributor) 50%,transparent 90%)}
-.card-contrib:hover{border-color:color-mix(in srgb,var(--contributor) 60%,transparent)}
+.card-contrib{border-color:color-mix(in srgb,var(--contrib) 25%,var(--border))}
+.card-contrib::before{background:var(--contrib)}
+.card-contrib:hover{border-color:var(--contrib-border)}
 
 /* ── Card icons ── */
 .card-icon-wrap{
-  width:36px;height:36px;border-radius:var(--radius-md);
+  width:34px;height:34px;border-radius:var(--radius-md);
   display:flex;align-items:center;justify-content:center;
-  margin-bottom:2px;flex-shrink:0;
+  flex-shrink:0;
 }
-.live-icon{background:var(--left-bg);color:var(--left)}
+.live-icon{background:var(--left-light);color:var(--left)}
 .game-icon{background:var(--game-bg);color:var(--game)}
-.contrib-icon{background:var(--contributor-bg);color:var(--contributor)}
+.contrib-icon{background:var(--contrib-light);color:var(--contrib)}
 
 /* ── Card text ── */
 .card-mode-tag{
   font-family:var(--font-mono);font-size:9px;font-weight:500;
-  letter-spacing:.14em;text-transform:uppercase;
+  letter-spacing:.16em;text-transform:uppercase;
 }
 .card-live .card-mode-tag{color:var(--left)}
 .card-game .card-mode-tag{color:var(--game)}
-.card-contrib .card-mode-tag{color:var(--contributor)}
+.card-contrib .card-mode-tag{color:var(--contrib)}
 
 .card-label{
-  font-family:var(--font-body);font-size:13px;font-weight:500;
-  color:var(--text);margin-top:2px;
+  font-family:var(--font-display);font-style:italic;font-size:17px;
+  color:var(--text);line-height:1.2;
 }
 
 .card-desc{
   font-family:var(--font-body);font-size:12px;font-weight:300;
-  color:var(--text-mid);line-height:1.55;flex:1;
+  color:var(--text-mid);line-height:1.6;flex:1;
 }
 
 .card-cta{
-  display:block;width:100%;padding:8px 0;
-  border-radius:var(--radius-sm);border:1px solid var(--border);
+  display:block;width:100%;padding:7px 0;
+  border-radius:var(--radius-sm);border:1px solid;
   background:transparent;cursor:pointer;
-  font-family:var(--font-mono);font-size:10px;font-weight:500;
-  letter-spacing:.1em;text-transform:uppercase;
-  transition:all .15s;text-align:center;
+  font-family:var(--font-mono);font-size:9px;font-weight:500;
+  letter-spacing:.12em;text-transform:uppercase;
+  transition:background .15s;text-align:center;
 }
 .card-live .card-cta{color:var(--left);border-color:var(--left-border)}
-.card-live .card-cta:hover{background:var(--left-bg)}
+.card-live .card-cta:hover{background:var(--left-light)}
 .card-game .card-cta{color:var(--game);border-color:var(--game-border)}
 .card-game .card-cta:hover{background:var(--game-bg)}
-.card-contrib .card-cta{color:var(--contributor);border-color:color-mix(in srgb,var(--contributor) 40%,transparent)}
-.card-contrib .card-cta:hover{background:var(--contributor-bg)}
+.card-contrib .card-cta{color:var(--contrib);border-color:var(--contrib-border)}
+.card-contrib .card-cta:hover{background:var(--contrib-light)}
 
-/* Card entry animation */
-.splash-card{opacity:0;transform:translateY(12px);animation:card-in .4s ease forwards}
-.splash-cards .splash-card:nth-child(1){animation-delay:.05s}
-.splash-cards .splash-card:nth-child(2){animation-delay:.15s}
-.splash-cards .splash-card:nth-child(3){animation-delay:.25s}
-@keyframes card-in{to{opacity:1;transform:translateY(0)}}
-
-/* ── Accuracy badge ── */
+/* ── Accuracy line ── */
 .splash-accuracy{
   font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;
-  color:var(--text-dim);text-align:center;margin-bottom:16px;
+  color:var(--text-dim);text-align:center;
 }
 .splash-accuracy strong{color:var(--text-mid);font-weight:500}
-
-/* ── Model status ── */
-.splash-status{display:flex;align-items:center;justify-content:center;gap:8px}
-.splash-status-dot{width:7px;height:7px;border-radius:50%;background:var(--text-dim)}
-.splash-status-dot.ok{background:var(--ok)}
-.splash-status-dot.err{background:var(--err)}
-.splash-status-txt{
-  font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;
-  color:var(--text-dim);
-}
 
 /* ── Logo in splash ── */
 .logo.link{cursor:pointer;transition:color .15s}
 .logo.link:hover{color:var(--left)}
-.logo.link span{transition:color .15s}
-.logo.link:hover span{color:var(--text-mid)}
