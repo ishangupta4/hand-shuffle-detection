@@ -1,0 +1,27 @@
+contributor:
+  collection_mode: both                  # npy_only | video_only | both
+
+  recording:
+    duration_seconds: 15
+    fps: 15
+    resolution: [640, 360]
+    hand_mask_padding_px: 50
+    codec: mp4v
+
+  storage:
+    backend: local                       # local | huggingface | s3
+    local_dir: user-data
+
+    huggingface:
+      repo_id: ""                        # e.g. ishangupta4/hand-shuffle-data
+      token_env: HF_TOKEN
+
+    s3:
+      bucket: ""
+      prefix: hand-shuffle-contributions/
+      region: us-east-1
+      access_key_env: AWS_ACCESS_KEY_ID
+      secret_key_env: AWS_SECRET_ACCESS_KEY
+
+  video_ids:
+    start_index: 20                      # contributed videos start at 000020
