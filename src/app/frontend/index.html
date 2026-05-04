@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Hand Shuffle — AI Inference</title>
+<title>Hand Shuffle AI — Research Demo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Space+Grotesk:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="css/base.css"/>
@@ -20,57 +20,65 @@
 <!-- ═══ SPLASH ═══ -->
 <div class="view active" id="view-splash">
   <div class="splash-wrap">
+    <canvas id="bg-skeleton"></canvas>
     <header class="splash-hdr">
-      <span class="logo">HandShuffle<span>.ai</span></span>
-      <span class="sys-badge" id="splash-badge">checking</span>
+      <div class="splash-hdr-left">
+        <span class="logo">HandShuffle<span>.ai</span></span>
+        <span class="sys-badge" id="splash-badge">checking</span>
+      </div>
+      <div class="splash-hdr-right">
+        <button class="toggle-track theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"></button>
+      </div>
     </header>
     <div class="splash-content">
       <div class="splash-main">
-        <p class="splash-eyebrow">AI · Deception Detection · Hand Skeleton Analysis</p>
-        <h1 class="splash-headline">Can you fool<br>the model?</h1>
-        <p class="splash-sub">Hide an object in one hand and shuffle. The AI reads only your hand skeleton — no object tracking, no colour detection. Just biomechanics.</p>
+        <p class="splash-institution">Northeastern University<br>Khoury College of Computer Sciences</p>
+        <h1 class="splash-headline">Hand Shuffle AI</h1>
+        <p class="splash-tagline">Can an AI read your hands?</p>
+        <p class="splash-sub">A real-time system that predicts which hand holds a hidden object by analyzing skeletal hand movement — no object tracking, no color detection. Pure biomechanics.</p>
+
         <div class="splash-cards">
-          <div class="splash-card card-game" onclick="switchFromSplashToGame()">
-            <div class="card-icon-wrap game-icon">
-              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                <polygon points="5,2 19,11 5,20" fill="currentColor"/>
-              </svg>
-            </div>
-            <div class="card-label">Detection Game</div>
-            <p class="card-desc">15-second shuffle challenge. Try to beat the model in a timed round.</p>
-            <span class="card-cta">Play Now →</span>
-          </div>
           <div class="splash-card card-live" onclick="switchFromSplashToLive()">
             <div class="card-icon-wrap live-icon">
-              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                <path d="M1 11 Q3 5 5 11 Q7 17 9 11 Q11 5 13 11 Q15 17 17 11 Q19 5 21 11" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="3" fill="currentColor"/>
+                <circle cx="10" cy="10" r="6.5" stroke="currentColor" stroke-width="1.4"/>
+                <circle cx="10" cy="10" r="9.25" stroke="currentColor" stroke-width=".6" opacity=".4"/>
               </svg>
             </div>
-            <div class="card-label">Live Analysis</div>
-            <p class="card-desc">Real-time continuous inference from your webcam as you shuffle.</p>
-            <span class="card-cta">Open →</span>
+            <span class="card-mode-tag">Live Mode</span>
+            <div class="card-label">Real-time inference</div>
+            <p class="card-desc">Watch predictions update continuously as you shuffle. See the model working live.</p>
+            <span class="card-cta">Start Live →</span>
+          </div>
+          <div class="splash-card card-game" onclick="switchFromSplashToGame()">
+            <div class="card-icon-wrap game-icon">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="8.5" stroke="currentColor" stroke-width="1.4"/>
+                <circle cx="10" cy="10" r="4.5" stroke="currentColor" stroke-width="1.4"/>
+                <circle cx="10" cy="10" r=".8" fill="currentColor"/>
+                <line x1="10" y1="1.5" x2="10" y2="5.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <span class="card-mode-tag">Game Mode</span>
+            <div class="card-label">Challenge the model</div>
+            <p class="card-desc">Shuffle for 15 seconds. Can the AI determine which hand holds the hidden object?</p>
+            <span class="card-cta">Play Game →</span>
           </div>
           <div class="splash-card card-contrib" onclick="switchFromSplashToContrib()">
             <div class="card-icon-wrap contrib-icon">
-              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                <circle cx="11" cy="11" r="9" stroke="currentColor" stroke-width="1.6"/>
-                <path d="M11 7v4l3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                <path d="M10 2l1.8 5.5H18l-4.9 3.6 1.9 5.7L10 13.5l-5 3.3L6.9 11 2 7.5h6.2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
               </svg>
             </div>
-            <div class="card-label">Contribute Data</div>
-            <p class="card-desc">Record a labeled shuffle session to help train future model versions.</p>
+            <span class="card-mode-tag">Contribute</span>
+            <div class="card-label">Donate shuffle data</div>
+            <p class="card-desc">Help improve the model by recording a labeled session. Your data stays local.</p>
             <span class="card-cta">Contribute →</span>
           </div>
         </div>
-        <div class="splash-stats">
-          <div class="stat"><span class="stat-val">84%</span><span class="stat-lbl">Accuracy</span></div>
-          <div class="stat-sep"></div>
-          <div class="stat"><span class="stat-val">0.967</span><span class="stat-lbl">AUC</span></div>
-          <div class="stat-sep"></div>
-          <div class="stat"><span class="stat-val">CNN1D</span><span class="stat-lbl">Architecture</span></div>
-          <div class="stat-sep"></div>
-          <div class="stat"><span class="stat-val">39</span><span class="stat-lbl">Features</span></div>
-        </div>
+
+        <p class="splash-accuracy"><strong>84.2%</strong> LOOCV Accuracy &nbsp;·&nbsp; AUC <strong>0.967</strong> &nbsp;·&nbsp; CNN1D · 19 videos · 39 biomechanical features</p>
       </div>
     </div>
   </div>
@@ -81,23 +89,25 @@
   <header class="hdr">
     <div class="hdr-left">
       <span class="logo link" onclick="switchToSplash()">HandShuffle<span>.ai</span></span>
+      <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:.06em">/ live</span>
       <span class="sys-badge" id="live-badge">idle</span>
     </div>
     <div class="hdr-right">
-      <button class="hdr-btn game-accent" onclick="switchToGame()">Detection Game</button>
+      <button class="hdr-btn game-accent" onclick="switchToGame()">Game Mode</button>
       <button class="hdr-btn danger" id="live-stop-btn" onclick="liveStop()" style="display:none">Stop Camera</button>
+      <button class="toggle-track theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"></button>
     </div>
   </header>
   <div class="body">
     <div class="cam-panel">
       <div class="cam-idle" id="live-idle">
-        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
-          <rect x="4" y="12" width="48" height="34" rx="5" stroke="#8b8fa8" stroke-width="1.5"/>
-          <circle cx="28" cy="29" r="10" stroke="#8b8fa8" stroke-width="1.5"/>
-          <circle cx="28" cy="29" r="4" fill="#8b8fa8" opacity=".3"/>
-          <rect x="20" y="7" width="16" height="7" rx="2.5" fill="#8b8fa8" opacity=".4"/>
+        <svg width="52" height="52" viewBox="0 0 56 56" fill="none">
+          <rect x="4" y="12" width="48" height="34" rx="5" stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="28" cy="29" r="10" stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="28" cy="29" r="4" fill="currentColor" opacity=".4"/>
+          <rect x="20" y="7" width="16" height="7" rx="2.5" fill="currentColor" opacity=".5"/>
         </svg>
-        <p>Click Start Prediction below</p>
+        <p>Click Start Prediction to begin</p>
       </div>
       <video id="webcam-live" class="cam-video" autoplay muted playsinline></video>
       <canvas id="kp-live" class="cam-canvas"></canvas>
@@ -114,17 +124,7 @@
       <div class="cam-br"><span class="nh-label" id="live-nhtag">NO HANDS</span></div>
     </div>
     <div class="rpanel">
-      <div class="rblock">
-        <div class="rlabel">Confidence</div>
-        <div class="conf-row frozen" id="live-crL">
-          <div class="conf-top"><span class="conf-name L">Left hand</span><span class="conf-val L" id="live-cvL">—</span></div>
-          <div class="conf-track"><div class="conf-fill L" id="live-fL" style="width:50%"></div></div>
-        </div>
-        <div class="conf-row frozen" id="live-crR">
-          <div class="conf-top"><span class="conf-name R">Right hand</span><span class="conf-val R" id="live-cvR">—</span></div>
-          <div class="conf-track"><div class="conf-fill R" id="live-fR" style="width:50%"></div></div>
-        </div>
-      </div>
+      <!-- Prediction — hero section -->
       <div class="verdict-block">
         <div class="rlabel">Prediction</div>
         <div class="verdict-inner" id="live-verdict">
@@ -133,16 +133,37 @@
           <span class="v-conf" id="live-vconf">start prediction to begin</span>
         </div>
       </div>
+      <!-- Confidence breakdown -->
+      <div class="rblock">
+        <div class="rlabel">Confidence Breakdown</div>
+        <div class="conf-row frozen" id="live-crL">
+          <div class="conf-top">
+            <span class="conf-name L">Left hand</span>
+            <span class="conf-val L" id="live-cvL">—</span>
+          </div>
+          <div class="conf-track"><div class="conf-fill L" id="live-fL" style="width:50%"></div></div>
+        </div>
+        <div class="conf-row frozen" id="live-crR">
+          <div class="conf-top">
+            <span class="conf-name R">Right hand</span>
+            <span class="conf-val R" id="live-cvR">—</span>
+          </div>
+          <div class="conf-track"><div class="conf-fill R" id="live-fR" style="width:50%"></div></div>
+        </div>
+      </div>
+      <!-- System status -->
       <div class="info-block">
-        <div class="rlabel" style="margin-bottom:10px">System Status</div>
+        <div class="rlabel">System Status</div>
         <div class="info-inner" id="live-info-inner">
           <div class="info-empty" id="live-info-empty">No active warnings</div>
         </div>
       </div>
+      <!-- Controls -->
       <div class="ctrl-row">
         <button class="btn prim" id="live-start-btn" onclick="liveStart()">Start Prediction</button>
         <button class="btn reset-btn" id="live-reset-btn" onclick="liveReset()" disabled>Reset Buffer</button>
       </div>
+      <div class="instr-strip">Hold an object in one hand · Keep both hands in frame · Shuffle continuously</div>
     </div>
   </div>
 </div>
@@ -151,24 +172,26 @@
 <div class="view" id="view-game">
   <header class="hdr">
     <div class="hdr-left">
-      <span class="logo link" onclick="switchToSplash()">HandShuffle<span>.ai</span> <span style="color:var(--game);font-size:11px">/ game</span></span>
+      <span class="logo link" onclick="switchToSplash()">HandShuffle<span>.ai</span></span>
+      <span style="font-family:var(--font-mono);font-size:10px;color:var(--game);letter-spacing:.06em">/ game</span>
       <span class="sys-badge" id="game-badge">idle</span>
     </div>
     <div class="hdr-right">
-      <button class="hdr-btn accent" onclick="switchToLive()">Live Analysis</button>
+      <button class="hdr-btn accent" onclick="switchToLive()">Live Mode</button>
       <button class="hdr-btn danger" id="game-stop-hdr" onclick="gameStop()" style="display:none">Stop Camera</button>
+      <button class="toggle-track theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"></button>
     </div>
   </header>
   <div class="body">
     <div class="game-cam">
       <div class="cam-idle" id="game-idle">
-        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
-          <rect x="4" y="12" width="48" height="34" rx="5" stroke="#8b8fa8" stroke-width="1.5"/>
-          <circle cx="28" cy="29" r="10" stroke="#8b8fa8" stroke-width="1.5"/>
-          <circle cx="28" cy="29" r="4" fill="#8b8fa8" opacity=".3"/>
-          <rect x="20" y="7" width="16" height="7" rx="2.5" fill="#8b8fa8" opacity=".4"/>
+        <svg width="52" height="52" viewBox="0 0 56 56" fill="none">
+          <rect x="4" y="12" width="48" height="34" rx="5" stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="28" cy="29" r="10" stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="28" cy="29" r="4" fill="currentColor" opacity=".4"/>
+          <rect x="20" y="7" width="16" height="7" rx="2.5" fill="currentColor" opacity=".5"/>
         </svg>
-        <p>Click Start Round below</p>
+        <p>Click Start Round to begin</p>
       </div>
       <video id="webcam-game" class="cam-video" autoplay muted playsinline></video>
       <canvas id="kp-game" class="cam-canvas"></canvas>
@@ -187,6 +210,7 @@
     </div>
     <div class="game-rpanel">
       <div class="game-status-block">
+        <div class="rlabel">Game Status</div>
         <span class="game-state-label" id="game-state-lbl">ready to start</span>
         <div class="ring-wrap">
           <svg width="120" height="120" viewBox="0 0 120 120">
@@ -196,7 +220,7 @@
           <div class="ring-num" id="ring-num">15</div>
         </div>
         <div class="result-card" id="result-card">
-          <span class="res-label">object detected in</span>
+          <span class="res-label">AI Verdict — object in</span>
           <span class="res-hand" id="res-hand">—</span>
           <span class="res-conf" id="res-conf">—</span>
           <div class="game-conf-block">
@@ -212,7 +236,7 @@
         </div>
       </div>
       <div class="game-info-block">
-        <div class="rlabel" style="margin-bottom:10px">System Status</div>
+        <div class="rlabel">System Status</div>
         <div class="info-inner" id="game-info-inner">
           <div class="info-empty" id="game-info-empty">No active warnings</div>
         </div>
@@ -221,6 +245,7 @@
         <button class="btn prim-game" id="game-start-btn" onclick="gameStart()">Start Round</button>
         <button class="btn stop-btn" id="game-stop-btn" onclick="gameStop()" disabled>Stop</button>
       </div>
+      <div class="instr-strip">Show which hand holds the object · Press Start · Shuffle 15 seconds · AI reveals its verdict</div>
     </div>
   </div>
 </div>
@@ -229,25 +254,26 @@
 <div class="view" id="view-contrib">
   <header class="hdr">
     <div class="hdr-left">
-      <span class="logo link" onclick="switchToSplash()">HandShuffle<span>.ai</span> <span style="color:var(--ok);font-size:11px">/ contribute</span></span>
+      <span class="logo link" onclick="switchToSplash()">HandShuffle<span>.ai</span></span>
+      <span style="font-family:var(--font-mono);font-size:10px;color:var(--contrib);letter-spacing:.06em">/ contribute</span>
       <span class="sys-badge" id="contrib-badge">idle</span>
     </div>
     <div class="hdr-right">
-      <button class="hdr-btn game-accent" onclick="switchToGame()">Detection Game</button>
-      <button class="hdr-btn accent" onclick="switchToLive()">Live Analysis</button>
+      <button class="hdr-btn game-accent" onclick="switchToGame()">Game Mode</button>
+      <button class="hdr-btn accent" onclick="switchToLive()">Live Mode</button>
       <button class="hdr-btn danger" id="contrib-stop-hdr" onclick="contribStop()" style="display:none">Stop Camera</button>
+      <button class="toggle-track theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"></button>
     </div>
   </header>
 
   <div class="body">
-    <!-- Camera panel -->
     <div class="cam-panel" style="position:relative">
       <div class="cam-idle" id="contrib-idle-cam">
-        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
-          <rect x="4" y="12" width="48" height="34" rx="5" stroke="#8b8fa8" stroke-width="1.5"/>
-          <circle cx="28" cy="29" r="10" stroke="#8b8fa8" stroke-width="1.5"/>
-          <circle cx="28" cy="29" r="4" fill="#8b8fa8" opacity=".3"/>
-          <rect x="20" y="7" width="16" height="7" rx="2.5" fill="#8b8fa8" opacity=".4"/>
+        <svg width="52" height="52" viewBox="0 0 56 56" fill="none">
+          <rect x="4" y="12" width="48" height="34" rx="5" stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="28" cy="29" r="10" stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="28" cy="29" r="4" fill="currentColor" opacity=".4"/>
+          <rect x="20" y="7" width="16" height="7" rx="2.5" fill="currentColor" opacity=".5"/>
         </svg>
         <p>Click Start Contributing below</p>
       </div>
@@ -265,9 +291,7 @@
       <div id="contrib-prog-wrap"><div id="contrib-prog"></div></div>
     </div>
 
-    <!-- Right panel — phase-driven -->
     <div class="contrib-rpanel">
-
       <!-- Phase: idle -->
       <div class="contrib-phase" id="contrib-p-idle" style="display:flex">
         <div class="contrib-idle-inner">
@@ -326,7 +350,6 @@
           <button class="btn prim-contrib" onclick="contribPlayAgain()">Contribute Again</button>
         </div>
       </div>
-
     </div><!-- /contrib-rpanel -->
   </div><!-- /body -->
 
@@ -334,30 +357,42 @@
   <div class="contrib-modal-overlay" id="contrib-modal">
     <div class="contrib-modal">
       <div class="contrib-modal-header">
-        <span class="contrib-modal-title">Contribute to the Dataset</span>
-        <button class="contrib-modal-close" onclick="contribConsentDecline()">&times;</button>
+        <div class="contrib-modal-icon">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M10 1.5C5.3 1.5 1.5 5.3 1.5 10S5.3 18.5 10 18.5 18.5 14.7 18.5 10 14.7 1.5 10 1.5z" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M10 9v5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            <circle cx="10" cy="6.5" r=".8" fill="currentColor"/>
+          </svg>
+        </div>
+        <span class="contrib-modal-title">Contribute to Research</span>
       </div>
+      <div class="contrib-modal-divider"></div>
       <div class="contrib-modal-body">
-        <p>Before recording, please review what data will be collected and how it is stored.</p>
+        <p>Before recording, please review what data will be collected.</p>
         <div class="contrib-modal-bullets">
           <div class="contrib-modal-bullet">
-            <div class="contrib-modal-bullet-dot"></div>
-            <p><strong>What is collected:</strong> Hand skeleton keypoints (21 landmarks per hand) and a privacy-masked video where only your hands are visible — no face, no background.</p>
+            <div class="contrib-modal-bullet-dot">✓</div>
+            <p>Hand skeleton keypoints are captured — not your face or background</p>
           </div>
           <div class="contrib-modal-bullet">
-            <div class="contrib-modal-bullet-dot"></div>
-            <p><strong>How it is stored:</strong> Saved locally on this server in the <code>user-data/</code> directory. It is never shared without your additional consent.</p>
+            <div class="contrib-modal-bullet-dot">✓</div>
+            <p>Video is privacy-masked — only your hands visible, background removed</p>
           </div>
           <div class="contrib-modal-bullet">
-            <div class="contrib-modal-bullet-dot"></div>
-            <p><strong>Withdrawal:</strong> You may stop the recording at any time by clicking Stop Camera. Sessions that are not submitted are discarded.</p>
+            <div class="contrib-modal-bullet-dot">✓</div>
+            <p>Data is stored locally and used only to improve this model</p>
+          </div>
+          <div class="contrib-modal-bullet">
+            <div class="contrib-modal-bullet-dot">✓</div>
+            <p>You may withdraw at any time by not submitting your session</p>
           </div>
         </div>
       </div>
-      <div class="contrib-modal-footer">By clicking I Agree you consent to the data collection described above.</div>
+      <div class="contrib-modal-divider"></div>
+      <p class="contrib-modal-footer">By clicking I Agree you consent to the data collection described above.</p>
       <div class="contrib-modal-actions">
         <button class="btn" style="flex:1" onclick="contribConsentDecline()">Cancel</button>
-        <button class="btn prim-contrib" style="flex:1" onclick="contribConsentAccept()">I Agree</button>
+        <button class="btn prim-contrib" style="flex:1" onclick="contribConsentAccept()">I Agree — Continue →</button>
       </div>
     </div>
   </div>
@@ -368,22 +403,22 @@
 <div class="view" id="view-contrib-review">
   <header class="hdr">
     <div class="hdr-left">
-      <span class="logo">HandShuffle<span>.ai</span> <span style="color:var(--ok);font-size:11px">/ review</span></span>
+      <span class="logo">HandShuffle<span>.ai</span></span>
+      <span style="font-family:var(--font-mono);font-size:10px;color:var(--contrib);letter-spacing:.06em">/ review</span>
       <span class="sys-badge contrib" id="contrib-review-badge">review</span>
     </div>
     <div class="hdr-right">
       <button class="hdr-btn danger" onclick="contribDiscard()">Discard</button>
+      <button class="toggle-track theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"></button>
     </div>
   </header>
   <div class="body">
-
     <!-- Masked video playback -->
     <div class="cam-panel" style="position:relative;background:#000">
       <div class="contrib-review-loading" id="contrib-review-loading">Processing video&hellip;</div>
       <video id="contrib-playback" muted playsinline loop controls
              style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none"></video>
     </div>
-
     <!-- Label panel -->
     <div class="contrib-rpanel">
       <div class="contrib-label-inner">
@@ -412,7 +447,6 @@
         <button class="btn prim-contrib" id="contrib-submit-btn" onclick="contribSubmitLabel()">Submit &rarr;</button>
       </div>
     </div>
-
   </div>
 </div><!-- /view-contrib-review -->
 

@@ -1,139 +1,174 @@
 /* ═══ SPLASH VIEW ═══ */
 
-.splash-wrap{
-  display:flex;flex-direction:column;height:100%;
-  background:var(--bg);
-  background-image:radial-gradient(ellipse 90% 55% at 50% -5%, rgba(34,211,238,.07) 0%, transparent 65%);
+/* ─── Background skeleton canvas ─── */
+#bg-skeleton{
+  position:absolute;inset:0;
+  pointer-events:none;
+  z-index:-1;
 }
 
+/* ─── Splash wrap ─── */
+.splash-wrap{
+  position:relative;
+  flex:1;                            /* fill #view-splash reliably */
+  display:flex;flex-direction:column;
+  background:var(--bg);
+  min-height:0;
+}
+
+/* ── Splash header ── */
 .splash-hdr{
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 40px;height:52px;flex-shrink:0;
-  border-bottom:1px solid var(--line);
+  padding:0 32px;height:52px;flex-shrink:0;
+  border-bottom:1px solid var(--border);
 }
+.splash-hdr-left{display:flex;align-items:center;gap:14px}
+.splash-hdr-right{display:flex;align-items:center;gap:10px}
 
+/* ── Content area ── */
 .splash-content{
   flex:1;display:flex;align-items:center;justify-content:center;
-  padding:40px 24px;overflow:auto;
+  padding:32px 24px;overflow:auto;
 }
 
 .splash-main{
   display:flex;flex-direction:column;align-items:center;
-  gap:22px;max-width:620px;width:100%;
+  gap:0;max-width:700px;width:100%;
 }
 
-/* ── Eyebrow ── */
-.splash-eyebrow{
-  font-family:var(--mono);font-size:10px;letter-spacing:.22em;
-  text-transform:uppercase;color:var(--acc);opacity:.75;
-  text-align:center;
+/* ── Institution label ── */
+.splash-institution{
+  font-family:var(--font-mono);font-size:9px;font-weight:400;
+  letter-spacing:.22em;text-transform:uppercase;
+  color:var(--text-dim);text-align:center;line-height:1.8;
+  margin-bottom:20px;
 }
 
 /* ── Headline ── */
 .splash-headline{
-  font-family:var(--mono);font-size:54px;font-weight:500;
-  letter-spacing:-.035em;color:var(--txt);text-align:center;
-  line-height:1.08;
+  font-family:var(--font-display);font-style:italic;
+  font-size:clamp(2.8rem,5.5vw,4.5rem);
+  color:var(--text);text-align:center;line-height:1.02;
+  letter-spacing:-.01em;
+  margin-bottom:14px;
+}
+
+/* ── Tagline ── */
+.splash-tagline{
+  font-family:var(--font-body);font-size:1.05rem;font-weight:300;
+  color:var(--text-mid);text-align:center;
+  margin-bottom:10px;
 }
 
 /* ── Subtext ── */
 .splash-sub{
-  font-size:14px;font-weight:300;color:var(--txt2);
-  text-align:center;max-width:460px;line-height:1.7;
+  font-family:var(--font-body);font-size:13px;font-weight:300;
+  color:var(--text-dim);text-align:center;
+  max-width:460px;line-height:1.75;margin-bottom:48px;
 }
 
-/* ── Cards ── */
-.splash-cards{display:flex;gap:14px;width:100%;max-width:520px}
+/* ── Mode cards ── */
+.splash-cards{
+  display:flex;gap:14px;width:100%;max-width:660px;
+  margin-bottom:40px;
+}
 
+/* Cards animate in via CSS — no JS dependency */
+@keyframes card-in{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
 .splash-card{
-  flex:1;padding:26px 22px;border-radius:10px;
-  border:1px solid var(--line);background:var(--bg1);
+  flex:1;padding:22px 18px 20px;border-radius:var(--radius-lg);
+  border:1px solid var(--border);background:var(--bg-surface);
   cursor:pointer;
-  transition:border-color .25s,background .25s,transform .18s;
   display:flex;flex-direction:column;gap:10px;
   position:relative;overflow:hidden;
+  box-shadow:var(--shadow-sm);
+  opacity:0;
+  animation:card-in .55s cubic-bezier(.34,1.1,.64,1) forwards;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
 }
+.splash-cards .splash-card:nth-child(1){animation-delay:.08s}
+.splash-cards .splash-card:nth-child(2){animation-delay:.2s}
+.splash-cards .splash-card:nth-child(3){animation-delay:.32s}
+/* JS may also add .card-visible — idempotent, final state is the same */
+.splash-card.card-visible{opacity:1;transform:translateY(0)}
 
-/* Top-edge shimmer on hover */
+/* Colored left border accent */
 .splash-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  opacity:0;transition:opacity .25s;
+  content:'';position:absolute;top:0;left:0;bottom:0;width:3px;
+  border-radius:3px 0 0 3px;opacity:0;transition:opacity .2s;
 }
-.card-game::before{background:linear-gradient(90deg,transparent 10%,var(--game) 50%,transparent 90%)}
-.card-live::before{background:linear-gradient(90deg,transparent 10%,var(--acc) 50%,transparent 90%)}
-
-.splash-card:hover{transform:translateY(-3px)}
 .splash-card:hover::before{opacity:1}
+.splash-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
 
-.card-game{border-color:rgba(167,139,250,.18)}
-.card-game:hover{
-  border-color:rgba(167,139,250,.45);
-  background:linear-gradient(155deg,rgba(167,139,250,.08) 0%,var(--bg1) 55%);
-}
+/* Live card */
+.card-live{border-color:color-mix(in srgb,var(--left) 25%,var(--border))}
+.card-live::before{background:var(--left)}
+.card-live:hover{border-color:var(--left-border)}
 
-.card-live{border-color:rgba(34,211,238,.18)}
-.card-live:hover{
-  border-color:rgba(34,211,238,.45);
-  background:linear-gradient(155deg,rgba(34,211,238,.08) 0%,var(--bg1) 55%);
-}
+/* Game card */
+.card-game{border-color:color-mix(in srgb,var(--game) 25%,var(--border))}
+.card-game::before{background:var(--game)}
+.card-game:hover{border-color:var(--game-border)}
 
-/* Card icon */
+/* Contrib card */
+.card-contrib{border-color:color-mix(in srgb,var(--contrib) 25%,var(--border))}
+.card-contrib::before{background:var(--contrib)}
+.card-contrib:hover{border-color:var(--contrib-border)}
+
+/* ── Card icons ── */
 .card-icon-wrap{
-  width:38px;height:38px;border-radius:8px;
+  width:34px;height:34px;border-radius:var(--radius-md);
   display:flex;align-items:center;justify-content:center;
-  margin-bottom:2px;flex-shrink:0;
+  flex-shrink:0;
 }
-.game-icon{background:rgba(167,139,250,.12);color:var(--game)}
-.live-icon{background:rgba(34,211,238,.12);color:var(--acc)}
+.live-icon{background:var(--left-light);color:var(--left)}
+.game-icon{background:var(--game-bg);color:var(--game)}
+.contrib-icon{background:var(--contrib-light);color:var(--contrib)}
 
-/* Card text */
-.card-label{
-  font-family:var(--mono);font-size:13px;font-weight:500;
-  letter-spacing:.03em;
+/* ── Card text ── */
+.card-mode-tag{
+  font-family:var(--font-mono);font-size:9px;font-weight:500;
+  letter-spacing:.16em;text-transform:uppercase;
 }
-.card-game .card-label{color:var(--game)}
-.card-live .card-label{color:var(--acc)}
+.card-live .card-mode-tag{color:var(--left)}
+.card-game .card-mode-tag{color:var(--game)}
+.card-contrib .card-mode-tag{color:var(--contrib)}
+
+.card-label{
+  font-family:var(--font-display);font-style:italic;font-size:17px;
+  color:var(--text);line-height:1.2;
+}
 
 .card-desc{
-  font-size:12px;font-weight:300;color:var(--txt2);
-  line-height:1.6;flex:1;
+  font-family:var(--font-body);font-size:12px;font-weight:300;
+  color:var(--text-mid);line-height:1.6;flex:1;
 }
 
 .card-cta{
-  font-family:var(--mono);font-size:10px;letter-spacing:.12em;
-  text-transform:uppercase;color:var(--txt3);
-  transition:color .2s;padding-top:2px;
+  display:block;width:100%;padding:7px 0;
+  border-radius:var(--radius-sm);border:1px solid;
+  background:transparent;cursor:pointer;
+  font-family:var(--font-mono);font-size:9px;font-weight:500;
+  letter-spacing:.12em;text-transform:uppercase;
+  transition:background .15s;text-align:center;
 }
-.card-game:hover .card-cta{color:var(--game)}
-.card-live:hover .card-cta{color:var(--acc)}
+.card-live .card-cta{color:var(--left);border-color:var(--left-border)}
+.card-live .card-cta:hover{background:var(--left-light)}
+.card-game .card-cta{color:var(--game);border-color:var(--game-border)}
+.card-game .card-cta:hover{background:var(--game-bg)}
+.card-contrib .card-cta{color:var(--contrib);border-color:var(--contrib-border)}
+.card-contrib .card-cta:hover{background:var(--contrib-light)}
 
-/* ── Stats row ── */
-.splash-stats{
-  display:flex;align-items:center;gap:0;
-  padding-top:18px;margin-top:2px;
-  border-top:1px solid var(--line);
-  width:100%;max-width:520px;justify-content:center;
+/* ── Accuracy line ── */
+.splash-accuracy{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;
+  color:var(--text-dim);text-align:center;
 }
+.splash-accuracy strong{color:var(--text-mid);font-weight:500}
 
-.stat{
-  display:flex;flex-direction:column;align-items:center;
-  gap:4px;padding:0 24px;
-}
-
-.stat-val{
-  font-family:var(--mono);font-size:15px;font-weight:500;
-  color:var(--txt);letter-spacing:.02em;
-}
-
-.stat-lbl{
-  font-family:var(--mono);font-size:8px;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--txt3);
-}
-
-.stat-sep{width:1px;height:30px;background:var(--line);flex-shrink:0}
-
-/* ── Logo clickable ── */
+/* ── Logo in splash ── */
 .logo.link{cursor:pointer;transition:color .15s}
-.logo.link:hover{color:var(--acc)}
-.logo.link span{transition:color .15s}
-.logo.link:hover span{color:var(--txt2)}
+.logo.link:hover{color:var(--left)}

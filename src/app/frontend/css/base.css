@@ -1,16 +1,125 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#070b13;--bg1:#0c1220;--bg2:#12182c;--bg3:#1a2038;
-  --line:#1e2840;--line2:#2b3858;
-  --txt:#dce4f5;--txt2:#7d90b8;--txt3:#475272;
-  --acc:#22d3ee;--acc-dim:#052230;
-  --left:#38bdf8;--left-bg:#061d34;
-  --right:#fb923c;--right-bg:#241108;
-  --warn:#fbbf24;--ok:#34d399;--ok-bg:#051f16;
-  --game:#a78bfa;--game-bg:#130c2e;
-  --mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;--r:6px;
-}
-html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased}
 
+/* ─── Light theme — warm paper ─── */
+:root{
+  /* Surfaces */
+  --bg:#f3efe7;
+  --bg-surface:#fdf9f4;
+  --bg-raised:#e9e3d9;
+  --bg-sunken:#dfd8cc;
+
+  /* Borders */
+  --border:#d0c8bc;
+  --border-mid:#bab0a2;
+  --border-strong:#9e9285;
+
+  /* Text */
+  --text:#1a1512;
+  --text-mid:#5c5044;
+  --text-dim:#9e9285;
+
+  /* Hand colors */
+  --left:#1a52a0;
+  --left-light:#dde8fb;
+  --left-border:#92b7f4;
+  --right:#b54309;
+  --right-light:#fde7d0;
+  --right-border:#f8a87c;
+
+  /* Mode colors */
+  --game:#5b21b6;
+  --game-bg:#eee9fe;
+  --game-border:#c5b6fd;
+  --ok:#166534;
+  --ok-bg:#ddfbe7;
+  --warn:#92400e;
+  --warn-bg:#fef3c7;
+  --err:#991b1b;
+  --err-bg:#fee2e2;
+
+  /* Contributor */
+  --contrib:#065f46;
+  --contrib-light:#d2fae6;
+  --contrib-border:color-mix(in srgb,var(--contrib) 35%,transparent);
+
+  /* Shadows */
+  --shadow-sm:0 1px 3px rgba(26,21,18,.06),0 1px 2px rgba(26,21,18,.04);
+  --shadow-md:0 4px 16px rgba(26,21,18,.09),0 2px 4px rgba(26,21,18,.04);
+  --shadow-lg:0 20px 48px rgba(26,21,18,.11),0 4px 12px rgba(26,21,18,.06);
+
+  /* Typography */
+  --font-display:'Playfair Display',Georgia,serif;
+  --font-mono:'JetBrains Mono','Courier New',monospace;
+  --font-body:'Space Grotesk',system-ui,sans-serif;
+
+  /* Shape */
+  --radius-sm:4px;
+  --radius-md:8px;
+  --radius-lg:12px;
+  --radius-xl:18px;
+  --radius-pill:999px;
+}
+
+/* ─── Dark theme — warm coal ─── */
+[data-theme="dark"]{
+  --bg:#0f0c08;
+  --bg-surface:#161210;
+  --bg-raised:#1e1914;
+  --bg-sunken:#27211a;
+
+  --border:#302820;
+  --border-mid:#40342a;
+  --border-strong:#554535;
+
+  --text:#eae3d8;
+  --text-mid:#9e9285;
+  --text-dim:#605248;
+
+  --left:#5b9cf5;
+  --left-light:#0b1d3d;
+  --left-border:#1c3a6e;
+  --right:#f97b4f;
+  --right-light:#3a1006;
+  --right-border:#5e2010;
+
+  --game:#a78bfa;
+  --game-bg:#1a1240;
+  --game-border:#2a1f5e;
+  --ok:#34d399;
+  --ok-bg:#04200e;
+  --warn:#fbbf24;
+  --warn-bg:#2c1c04;
+  --err:#f87171;
+  --err-bg:#2c0404;
+
+  --contrib:#34d399;
+  --contrib-light:#042e1c;
+  --contrib-border:color-mix(in srgb,var(--contrib) 35%,transparent);
+
+  --shadow-sm:0 1px 4px rgba(0,0,0,.55);
+  --shadow-md:0 4px 16px rgba(0,0,0,.55);
+  --shadow-lg:0 20px 48px rgba(0,0,0,.65);
+}
+
+/* ─── Base ─── */
+html,body{
+  height:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ─── View system ─── */
 .view{position:absolute;inset:0;display:none;flex-direction:column}
 .view.active{display:flex}
+
+/* ─── Focus ─── */
+:focus-visible{outline:2px solid var(--left);outline-offset:2px}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:2px}
