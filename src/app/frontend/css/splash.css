@@ -1,8 +1,6 @@
 /* ═══ SPLASH VIEW ═══ */
 
 /* ─── Background skeleton canvas ─── */
-/* Lives inside .splash-wrap (position:relative). z-index:-1 puts it
-   above .splash-wrap's own background but below all in-flow content. */
 #bg-skeleton{
   position:absolute;inset:0;
   pointer-events:none;
@@ -11,7 +9,7 @@
 
 /* ─── Splash wrap ─── */
 .splash-wrap{
-  position:relative;                 /* establishes stacking context for canvas */
+  position:relative;
   flex:1;                            /* fill #view-splash reliably */
   display:flex;flex-direction:column;
   background:var(--bg);
