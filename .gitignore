@@ -16,6 +16,7 @@ data/features/
 data/features_static/
 data/features_dynamic/
 data/augmented/
+data/which hands/
 
 # Output artifacts — skip all the heavy generated visuals and logs
 outputs/sample_frames/
